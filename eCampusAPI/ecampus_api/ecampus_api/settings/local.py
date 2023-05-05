@@ -17,8 +17,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'eCampusAPI',
         'HOST': '',
-        'USER': 'root',
-        'PASSWORD': '',
+        'USER': 'djangoUser',
+        'PASSWORD': 'password1',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
@@ -34,7 +34,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:8000",
     'http://creaxiotechnologies.com',
-    'http://vbes.in'
+    'http://vbes.in',
+    "http://localhost:4200"
 ]
 
 SWAGGER_SETTINGS = {
