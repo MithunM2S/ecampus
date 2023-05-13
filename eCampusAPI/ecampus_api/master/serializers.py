@@ -169,3 +169,10 @@ class MotherTongueSerializer(serializers.ModelSerializer):
     class Meta:
         model = master_models.MotherTongue
         fields = ['id', 'name']
+
+
+class AcademicYearSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = master_models.AcademicYear
+        fields = ['id','academic_year', 'start', 'end']

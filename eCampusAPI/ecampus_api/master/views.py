@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from master import models as master_models
 from rest_framework import generics
 from rest_framework import viewsets, mixins
@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny
-from master.services import get_academic_years, update_repo, get_all_academic_years
+from master.services import get_academic_years, update_repo, get_all_academic_years, get_academic_year_string, get_institution_all_academic_year
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 
@@ -23,10 +23,44 @@ class MasterGenericMixinViewSet(mixins.CreateModelMixin,
                                 pass
 
 class AcademicYear(APIView):
-    permission_classes = [AllowAny, HasOrganizationAPIKey]
+    # permission_classes = [AllowAny, HasOrganizationAPIKey]
+    permission_classes = [AllowAny]
+    serializer_class = serializers.AcademicYearSerializer
 
     def get(self, request):
         return Response(get_academic_years())
+    
+    def post(self, request):
+
+        #adding academic_year string as we get only start and end date
+        try:
+            request.data['academic_year'] = get_academic_year_string(request.data['start'], request.data['end'])
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(get_institution_all_academic_year())
+            else:
+                return Response(serializer.errors)
+        except:
+            return Response({
+                "data" : "Format for start or end date properly not recieved"
+            })
+    
+    def delete(self, request):
+        try:
+            academic_year = get_object_or_404(master_models.AcademicYear, id=request.data['id'])
+            if academic_year:
+                academic_year.delete()
+                return Response(get_institution_all_academic_year())
+        except:
+            return Response({
+                'data' : 'academic year doesn\'t exist'
+            })
+            
+        
+    
+        
+        
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = master_models.Profile.objects.all()
@@ -211,7 +245,10 @@ class MotherTongueViewSet(MasterGenericMixinViewSet):
     # http_method_names = ['get', 'post']
 
 class ListAcademicYear(APIView):
-    permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
+    # permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         return Response(get_all_academic_years())
+    
+

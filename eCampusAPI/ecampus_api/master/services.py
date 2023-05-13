@@ -10,7 +10,7 @@ from master.models import Profile, Repo, RepoClass, ClassName, AcademicYear
 from django.db.models import Q, Count
 from django.core.exceptions import ObjectDoesNotExist
 from fee import models as fee_models
-
+from master import serializers as master_serializer
 
 def send_sms(number, message):
     message = message
@@ -135,3 +135,20 @@ def check_academic_year(year):
         return True
     else:
         return False
+    
+def get_academic_year_string(start, end):
+    
+    '''
+    this function get the starting and ending 
+    academic year date and returns 
+    academic year string
+    '''
+    start_date = datetime.strptime(start,"%Y-%m-%d")
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+
+    return str(start_date.year) + "_" + str(end_date.year)
+    
+def get_institution_all_academic_year():
+    response_data = AcademicYear.objects.all().order_by('-academic_year')
+    serializer = master_serializer.AcademicYearSerializer(response_data, many=True)
+    return serializer.data
