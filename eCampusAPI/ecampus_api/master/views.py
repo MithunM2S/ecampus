@@ -58,7 +58,20 @@ class AcademicYear(APIView):
             })
             
         
-    
+    def put(self, request):
+        try:
+            data = request.data
+            academic_year = get_object_or_404(master_models.AcademicYear, id=request.data['id'])
+            if academic_year:
+                request.data['academic_year'] = get_academic_year_string(request.data['start'], request.data['end'])
+                serializer = self.serializer_class(academic_year, data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(get_institution_all_academic_year())
+                else:
+                    return Response(serializer.errors)
+        except:
+            return Response({'data' : 'the academic year doesn\'t exist'})
         
         
 
@@ -249,6 +262,6 @@ class ListAcademicYear(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        return Response(get_all_academic_years())
+        return Response(get_institution_all_academic_year())
     
 

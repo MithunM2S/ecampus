@@ -6,7 +6,7 @@ from student.validators import *
 from django.db.models import F
 import ast
 from master import services as master_services
-
+from preadmission.models import Application as preadmission_application
 class StudentDocumentSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -158,3 +158,23 @@ class AttendanceCreateOrUpdateSerializer(serializers.ModelSerializer):
         if error:
             raise serializers.ValidationError(error_message)
         return validate_data
+
+
+'''
+Add existing student preadmission_application model serializer
+
+'''
+
+
+class AddExistingStudentApplicationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = preadmission_application
+        exclude = ['created_on', 'created_by', 'reference_number', 'docs', 'mode', 'query', 'email_address', 'student_name']
+
+
+class AddExistingStudentProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        exclude = ['application_id', 'admission_on', 'created_by', 'created_on']    
