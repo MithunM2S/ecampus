@@ -12,7 +12,7 @@ from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny
 from master.services import get_academic_years, update_repo, get_all_academic_years, get_academic_year_string, get_institution_all_academic_year
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 
 
 class MasterGenericMixinViewSet(mixins.CreateModelMixin,
@@ -265,3 +265,33 @@ class ListAcademicYear(APIView):
         return Response(get_institution_all_academic_year())
     
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def auto_add_academic_year(request):
+    
+    '''
+    This is a function which adds academic years automatically by
+    taking how many years you want to add automatically as input
+    '''
+    
+    if request.method == 'POST':
+        data = request.data
+        number_of_years = int(data['number_of_years'])
+        try:
+            existing_last_academic_year = master_models.AcademicYear.objects.order_by('start')[0]
+            existing_last_academic_year_start = existing_last_academic_year.start
+            existing_last_academic_year_end = existing_last_academic_year.end
+            print(existing_last_academic_year_start, existing_last_academic_year_end)
+            for i in range(1, number_of_years + 1):
+                start = existing_last_academic_year_start.replace(year = existing_last_academic_year_start.year - i)
+                end = existing_last_academic_year_end.replace(year = existing_last_academic_year_end.year - i)
+                academic_year = str(start.year) + "_" + str(end.year)
+                master_models.AcademicYear.objects.create(academic_year=academic_year, start=start,end=end)
+            return Response(get_institution_all_academic_year())
+        except master_models.AcademicYear.DoesNotExist:
+            return {'message' : 'there\'s no existing year please add atleast one academci year to auto add'}
+        except:
+            return {'message' : 'Internal server error'}
+        
+        

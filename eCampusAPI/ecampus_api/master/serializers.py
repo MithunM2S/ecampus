@@ -188,5 +188,5 @@ class AcademicYearSerializer(serializers.ModelSerializer):
     #     if master_models.AcademicYear.objects.filter(academic_year = data['academic_year']).exists():
     #         raise serializers.ValidationError('Academic year already exists')
        
-        # return data
+    #     return data
         
