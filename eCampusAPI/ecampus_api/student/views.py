@@ -8,7 +8,7 @@ from django.db import transaction, IntegrityError
 from master.models import Repo, ClassName, RepoClass
 from master.services import get_institution_prefix, unique_token
 from django_filters.rest_framework import DjangoFilterBackend
-from student.services import ProfileCountService, get_student_state
+from student.services import ProfileCountService, get_student_state, delete_null_keys_if_present
 from rest_framework.views import APIView
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -210,26 +210,28 @@ class AddExistingStudent(APIView):
 
     @transaction.atomic
     def post(self, request):
-        data = request.data
+        data = delete_null_keys_if_present(request.data)
         application_serializer = student_serializer.AddExistingStudentApplicationSerializer(data=data, partial=True) #Application Serializer
 
         try:
             with transaction.atomic():
                 if application_serializer.is_valid():
                     application_token = unique_token() 
-                    email_address = data['father_email'] #email id intial to father if primary contact is mother it will be set to mother
-                    if data['primary_contact_person'] == 'mother':
+                    if data['primary_contact_person'] == 'father':
+                        email_address = data['father_email'] #email id intial to father if primary contact is mother it will be set to mother
+                    else:
                         email_address = data['mother_email']
                     application_instance = application_serializer.save(application_token=application_token, email_address=email_address, student_name=data['first_name'])
                     application_id = application_instance.id #phase 1 is over
-
+                    print('phase 1 is over')
                     #once the application is created we have to create student profile
                     profile_serializer = student_serializer.AddExistingStudentProfileSerializer(data=data, partial=True)
                     
                     if profile_serializer.is_valid():
                         student_id = 1000 + self.student_profile_query_set.count() + 1
                         profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, admission_number=data['admission_number'], admission_academic_year=data['academic_year'])
-                        #phase 2 is over now have to add have to map parent to student 
+                        #phase 2 is over now have to add have to map parent to student
+                        print('phase 2 is over') 
                         student_foreign_key_id = profile_instance.id
                         parent_serializer = student_serializer.ParentDetailsSerializer(data=data, partial=True)
 
@@ -237,20 +239,23 @@ class AddExistingStudent(APIView):
                             parent_instance = parent_serializer.save(student_id=student_foreign_key_id)
                             #phase 3 is over now we have to add data to student history
                             student_model.History.objects.create(student=profile_instance, from_class=data['class_name'], from_academic_year=data['academic_year'])
-                            return response.Response({"message" : "student added successfully"})
+                            return response.Response({"message" : "student added successfully"}, status=200)
                             
                         else:
-                            return response.Response(parent_serializer.errors) 
+                            data = {'message': parent_serializer.errors}
+                            return response.Response(parent_serializer.errors, status=422)
                     else:
-                        return response.Response(profile_serializer.errors)
+                        return response.Response(profile_serializer.errors, status=422)
                 else:
-                    return response.Response(application_serializer.errors)
+                    return response.Response(application_serializer.errors, status=422) 
+                    
                 
         except IntegrityError as e:
             transaction.set_rollback(True)
-            return response.Response({'message' : 'student admission number already exist'})
-           
-        
+            return response.Response({'message' : 'student admission number already exist'}, status=422)
+        except Exception as e:
+            print(e)
+            return response.Response({'message': 'some error has occured'}, status=422)    
 
 
        

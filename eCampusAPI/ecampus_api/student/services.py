@@ -112,3 +112,24 @@ def get_student(student_id):
         return student
     except Exception as e:
         return None
+    
+
+def delete_null_keys_if_present(request_data):
+    '''
+    This function is used to delete the keys of the 
+    empty string so that later we can send it for the serializer
+    '''
+    cleaned_request_data = request_data
+    keys_to_delete = []
+    for key in request_data:
+        if len(str(request_data[key]).strip()) == 0:
+            keys_to_delete.append(key)
+    
+    if keys_to_delete:  
+        for key in keys_to_delete:
+            del cleaned_request_data[key]
+        return cleaned_request_data
+    
+    return cleaned_request_data
+    
+            
