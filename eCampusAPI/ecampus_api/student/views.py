@@ -229,7 +229,10 @@ class AddExistingStudent(APIView):
                     
                     if profile_serializer.is_valid():
                         student_id = 1000 + self.student_profile_query_set.count() + 1
-                        profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, admission_number=data['admission_number'], admission_academic_year=data['academic_year'])
+                        profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, 
+                                                                   admission_number=data['admission_number'], 
+                                                                   admission_academic_year=data['academic_year'],
+                                                                   primary_contact=data['primary_contact_person'])
                         #phase 2 is over now have to add have to map parent to student
                         print('phase 2 is over') 
                         student_foreign_key_id = profile_instance.id
@@ -257,7 +260,4 @@ class AddExistingStudent(APIView):
             print(e)
             return response.Response({'message': 'some error has occured'}, status=422)    
 
-
-       
-        
 

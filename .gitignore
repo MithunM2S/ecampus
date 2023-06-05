@@ -3,7 +3,7 @@
 .venv/
 script.py
 key_value.txt
-
+db_clean.txt
 # compiled output
 /dist
 /tmp

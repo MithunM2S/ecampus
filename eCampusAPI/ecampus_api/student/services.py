@@ -31,15 +31,27 @@ class ProfileCountService(object):
         return old_student_count
 
     def get_cards_count(self):
+        #queryset is a just a manager object of a profile
+        
         cards = self.queryset.values('admission_academic_year').order_by().annotate(
             total_student= Count('id'),
             new_student= Count('id', filter=Q(admission_academic_year=self.filter_admission_academic_year)),
         )
+        print(cards, 'here i am')
+        
+        '''
+        The cards variable look something like this for the academic_year 2023_2024
+        <QuerySet [{'admission_academic_year': '2023_2024', 'total_student': 410, 'new_student': 410}]>
+        '''
+
         old_student = self.get_old_student_count()
         if cards:
             del cards[0]['admission_academic_year']
             cards[0]['old_student'] = old_student
+            cards[0]['new_student'] = cards[1]['new_student']
+            cards[0]['total_student'] += cards[1]['total_student']
             data = cards
+            # print(data)
         else:
             data = [{"old_student": old_student}]
         return data
@@ -117,7 +129,8 @@ def get_student(student_id):
 def delete_null_keys_if_present(request_data):
     '''
     This function is used to delete the keys of the 
-    empty string so that later we can send it for the serializer
+    empty string of the json sent from the frontend
+    so that later we can send it for the serializer
     '''
     cleaned_request_data = request_data
     keys_to_delete = []
