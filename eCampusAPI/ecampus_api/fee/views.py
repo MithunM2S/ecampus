@@ -111,8 +111,51 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       return queryset
 
   def perform_create(self, serializer):
+    '''
+    After we get the validated from the serializer,
+    we convert to dict to check if the fee_type is montly
+    if the fee type is montly we take start date and end date
+    and we create a FeeToClass instances.
+    
+    '''
+    data = dict(serializer.validated_data) #this is a validated data from the serialzier 
     user = self.request.user.id
-    serializer.save(created_by=user)
+    if data['fee_type'].fee_type == "monthly":
+        print('month is being executed')
+        start_date = data['start_date'] #date object
+        end_date = data['end_date'] #date object
+        num_of_months = fee_services.calculate_month_difference(start_date, end_date)
+        print(num_of_months)
+        if num_of_months == 0: 
+          num_of_months = 1 
+          '''checking if the start and end date comes on the same month,
+          we are collecting fee only for that month therefore making it 1.'''
+        
+        month = start_date
+        if num_of_months > 1:
+          for i in range(0, num_of_months):
+            
+            fee_model.FeeToClass.objects.create(
+              start_date = start_date,
+              end_date = end_date,
+              class_name = data['class_name'],
+              section = data['section'],
+              quota = data['quota'],
+              fee_category = data['fee_category'],
+              fee_type = data['fee_type'],
+              new_student_amount = data['new_student_amount'],
+              old_student_amount = data['old_student_amount'],
+              created_by = user,
+              academic_year = data['academic_year'],
+              month = month   
+            )
+            if month.month == 12:
+              month = month.replace(month = 1, year = month.year + 1)
+            else:
+              month = month.replace(month = month.month + 1)
+        serializer.save(created_by=user, month=month)   
+    else:
+      serializer.save(created_by=user)
 
 
 class PaymentModeViewset(viewsets.ModelViewSet):
@@ -167,15 +210,18 @@ class FetchFees(APIView):
       up_academic_year = services.get_academic_years_key_value('upcoming')[0]
       academicYear = request.GET.get('academicYear', None)
       # fee_category = request.GET.get('feeCategory', None)
+      
       if not academicYear:
         academicYear = run_academic_year
       student = student_services.get_student(student_id)
+      
       if student:
         studentId = student.id
-        if student_services.get_student_state(student_id) ==   'new_student':
+        if student_services.get_student_state(student_id) ==   'new_student': #get student state helps to identify old and new student
           fee_amount_field = 'new_student_amount'
         else :
           fee_amount_field = 'old_student_amount'
+        
         queryset = fee_model.FeeToClass.objects.select_related('class_name', 'section', 'quota', 'fee_category', 'fee_type').values(
           feetoClassId=F('id'),
           academicYear=F('academic_year'),
@@ -191,12 +237,16 @@ class FetchFees(APIView):
           feeTypeName=F('fee_type__fee_type_name'),
           feeTypeId=F('fee_type__id'),
           feeAmount=F(fee_amount_field),
+          mont=F('month')
         ).filter(
           (Q(class_name=student.class_name) | Q(student=student.id)),
           fee_category=fee_category_id,
           quota=student.quota,
           ).order_by('id')
+        
+        
         fees_response = queryset 
+       
         # print(queryset)
         for key,fees in enumerate(fees_response):
           concessionObject = get_concession(student_id, fees.get('feetoClassId', 0), academicYear)

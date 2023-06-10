@@ -97,6 +97,9 @@ class FeeToClassUpdateSerializer(serializers.ModelSerializer):
     return validated_data
 
 
+
+
+
 class FeeToClassDetailSerializer(serializers.ModelSerializer):
   class Meta:
     model = models.FeeToClass
