@@ -47,6 +47,11 @@ class FeeTypeViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     serializer.save(created_by=self.request.user.id)
 
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    return queryset
+  
 
 class FeeCategoryViewset(viewsets.ModelViewSet):
   queryset = fee_model.FeeCategory.objects.all()
@@ -66,6 +71,11 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     user = self.request.user.id
     serializer.save(created_by=user)
+    
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    return queryset
 
 
 class FeeToClassViewset(viewsets.ModelViewSet):
@@ -121,7 +131,6 @@ class FeeToClassViewset(viewsets.ModelViewSet):
     data = dict(serializer.validated_data) #this is a validated data from the serialzier 
     user = self.request.user.id
     if data['fee_type'].fee_type == "monthly":
-        print('month is being executed')
         start_date = data['start_date'] #date object
         end_date = data['end_date'] #date object
         num_of_months = fee_services.calculate_month_difference(start_date, end_date)
@@ -156,8 +165,46 @@ class FeeToClassViewset(viewsets.ModelViewSet):
         serializer.save(created_by=user, month=month)   
     else:
       serializer.save(created_by=user)
-
-
+      
+  # def perform_update(self, serializer):
+  #   return super().perform_update(serializer)
+  def perform_update(self, serializer):
+    '''
+    Monthly fee updation,
+    since annual fees updation happens only on one instance,
+    montly fees happens over all the instance of the month.
+    let's say you have 12 montly fee_to_class instance it 
+    updates over all.
+    '''
+    data = serializer.validated_data #contains all the validated data of the form 
+    fee_type_instance = data['fee_type']
+    if fee_type_instance.fee_type == "monthly":
+      class_instance = data['class_name']
+      quota = data['quota']
+      fee_category = data['fee_category']
+      start_date = data['start_date']
+      end_date = data['end_date']
+      queryset = fee_model.FeeToClass.objects.filter(class_name__id = class_instance.id,   
+                                              quota__id = quota.id, 
+                                              fee_type__id=fee_type_instance.id,
+                                              fee_category__id = fee_category.id).order_by('created_on')
+      num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
+      print(data['start_date'], data['end_date'])
+      start_date = data['start_date']
+      for instance in queryset:
+        if num_of_months > 0:
+          instance.old_student_amount, instance.new_student_amount = data['old_student_amount'], data['new_student_amount'] 
+          instance.month = start_date
+          instance.save()
+          if start_date.month == 12:
+            start_date = start_date.replace(month = 1, year = start_date.year + 1)
+          else:
+            start_date = start_date.replace(month = start_date.month + 1)
+          num_of_months -= 1
+        else:
+          instance.delete()
+    else:
+      print('nothing is happening')
 class PaymentModeViewset(viewsets.ModelViewSet):
   queryset = fee_model.PaymentMode.objects.all()
   serializer_class = serializers.PaymentModeSerializer
@@ -172,6 +219,11 @@ class PaymentModeViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     user = self.request.user.id
     serializer.save(created_by=user)
+  
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    return queryset
 
 
 # Fee Concession ViewSet
