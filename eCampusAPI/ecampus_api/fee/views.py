@@ -176,6 +176,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
     let's say you have 12 montly fee_to_class instance it 
     updates over all.
     '''
+    user = self.request.user.id
     data = serializer.validated_data #contains all the validated data of the form 
     fee_type_instance = data['fee_type']
     if fee_type_instance.fee_type == "monthly":
@@ -189,13 +190,14 @@ class FeeToClassViewset(viewsets.ModelViewSet):
                                               fee_type__id=fee_type_instance.id,
                                               fee_category__id = fee_category.id).order_by('created_on')
       num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
-      print(data['start_date'], data['end_date'])
       start_date = data['start_date']
       for instance in queryset:
         if num_of_months > 0:
           instance.old_student_amount, instance.new_student_amount = data['old_student_amount'], data['new_student_amount'] 
           instance.month = start_date
           instance.save()
+    
+        
           if start_date.month == 12:
             start_date = start_date.replace(month = 1, year = start_date.year + 1)
           else:
@@ -203,8 +205,42 @@ class FeeToClassViewset(viewsets.ModelViewSet):
           num_of_months -= 1
         else:
           instance.delete()
+      
+      while num_of_months > 0:
+        '''
+            There may be cases where we have to create more
+            instances, let say there were only 5 instances before 
+            now if we change start date and end date, and if we have to create 10 instances 
+            5 instances will be already updated by the above code, but now we have to create 5 more 
+            new instances. This part will do it.
+        '''
+        
+        fee_model.FeeToClass.objects.create(start_date=data['start_date'],
+                                              end_date=data['end_date'],
+                                              class_name=data['class_name'],
+                                              section=data['section'],
+                                              quota=data['quota'],
+                                              fee_category=data['fee_category'],
+                                              fee_type=data['fee_type'],
+                                              new_student_amount=data['new_student_amount'],
+                                              old_student_amount=data['old_student_amount'],
+                                              created_by=user,
+                                              academic_year=data['academic_year'],
+                                              month=start_date)
+         
+       
+        if start_date.month == 12:
+            start_date = start_date.replace(month = 1, year = start_date.year + 1)
+         
+        else:
+            start_date = start_date.replace(month = start_date.month + 1)
+         
+        num_of_months -=1
+        
     else:
-      print('nothing is happening')
+      return super().perform_update(serializer)
+    
+    
 class PaymentModeViewset(viewsets.ModelViewSet):
   queryset = fee_model.PaymentMode.objects.all()
   serializer_class = serializers.PaymentModeSerializer
