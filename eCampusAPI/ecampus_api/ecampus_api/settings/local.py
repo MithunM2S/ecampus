@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ecampusdummy',
+        'NAME': 'ideal_school',
         'HOST': '',
         'USER': 'djangoUser',
         'PASSWORD': 'password1',

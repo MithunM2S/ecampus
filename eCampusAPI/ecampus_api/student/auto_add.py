@@ -34,7 +34,7 @@ import json
 
 
 
-df = pd.read_excel('school_data.xlsx', sheet_name="Sheet10")
+df = pd.read_excel('ideal_final_data.xlsx', sheet_name="Sheet12")
 
 
 for index, row in df.iterrows():

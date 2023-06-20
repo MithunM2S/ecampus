@@ -45,17 +45,24 @@ class ProfileCountService(object):
         '''
 
         old_student = self.get_old_student_count()
-        if cards: #bugs in the code needs to be fixed 
-            print(cards, 'ok')
+        # if cards: #bugs in the code needs to be fixed 
+        #     print(cards, 'ok')
+        #     del cards[0]['admission_academic_year']
+        #     cards[0]['old_student'] = old_student
+        #     cards[0]['new_student'] = cards[1]['new_student']
+        #     cards[0]['total_student'] += cards[1]['total_student']
+        #     data = cards
+        #     # print(data)
+        # else:
+        #     data = [{"old_student": old_student}]
+        if cards:
             del cards[0]['admission_academic_year']
             cards[0]['old_student'] = old_student
-            cards[0]['new_student'] = cards[1]['new_student']
-            cards[0]['total_student'] += cards[1]['total_student']
             data = cards
-            # print(data)
         else:
             data = [{"old_student": old_student}]
         return data
+        
 
     # Get Class group wise count 
     def get_class_group_wise_student_count(self):
