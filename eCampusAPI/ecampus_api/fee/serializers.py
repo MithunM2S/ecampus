@@ -97,6 +97,9 @@ class FeeToClassUpdateSerializer(serializers.ModelSerializer):
     return validated_data
 
 
+
+
+
 class FeeToClassDetailSerializer(serializers.ModelSerializer):
   class Meta:
     model = models.FeeToClass
@@ -194,7 +197,8 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
         feeId=F('id'),
         feeName=F('fee_to_class__fee_type__fee_type_name'),
         paidAmount=F('paid_amount'),
-        academicYear=F('academic_year')
+        academicYear=F('academic_year'),
+        month = F('fee_to_class__month')
         ).filter(
           id__in=[cid for cid in instance.fee_collections.split(",")]
       )

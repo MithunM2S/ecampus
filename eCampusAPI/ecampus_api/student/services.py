@@ -37,7 +37,7 @@ class ProfileCountService(object):
             total_student= Count('id'),
             new_student= Count('id', filter=Q(admission_academic_year=self.filter_admission_academic_year)),
         )
-        print(cards, 'here i am')
+    
         
         '''
         The cards variable look something like this for the academic_year 2023_2024
@@ -45,16 +45,24 @@ class ProfileCountService(object):
         '''
 
         old_student = self.get_old_student_count()
+        # if cards: #bugs in the code needs to be fixed 
+        #     print(cards, 'ok')
+        #     del cards[0]['admission_academic_year']
+        #     cards[0]['old_student'] = old_student
+        #     cards[0]['new_student'] = cards[1]['new_student']
+        #     cards[0]['total_student'] += cards[1]['total_student']
+        #     data = cards
+        #     # print(data)
+        # else:
+        #     data = [{"old_student": old_student}]
         if cards:
             del cards[0]['admission_academic_year']
             cards[0]['old_student'] = old_student
-            cards[0]['new_student'] = cards[1]['new_student']
-            cards[0]['total_student'] += cards[1]['total_student']
             data = cards
-            # print(data)
         else:
             data = [{"old_student": old_student}]
         return data
+        
 
     # Get Class group wise count 
     def get_class_group_wise_student_count(self):
@@ -105,6 +113,10 @@ class ProfileCountService(object):
         return academic_year_wise_count
 
 def get_student_state(student_id):
+    '''
+    Function which helps to determine whether the student is old or new
+    '''
+    
     try:
         student = Profile.objects.values('id', 'class_name', 'section', 'quota', 'admission_academic_year').get(id=student_id)
         run_academic_year = master_services.get_academic_years_key_value('running')[0]

@@ -15,7 +15,11 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+<<<<<<< HEAD
         'NAME': 'ecampus',
+=======
+        'NAME': 'ideal_school',
+>>>>>>> 59462e4383363179f8d419b7505dda58abf61292
         'HOST': '',
         'USER': 'surya-dev',
         'PASSWORD': '111111',
