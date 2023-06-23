@@ -20,6 +20,8 @@ from base import services as base_services
 from master.models import GroupConcat
 from django.db.models.functions import Substr
 
+import datetime
+
 
 class FeeGenericMixinViewSet(mixins.CreateModelMixin,
                                 mixins.ListModelMixin,
@@ -115,7 +117,17 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       if filter_by == 'student':
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
-        queryset = queryset.filter(class_name__isnull=False)
+        # queryset = queryset.filter(class_name__isnull=False)
+        queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
+
+        '''below two lines will filter out the rows
+          based on the current month bcz every month
+          you having the same fee and client asked to
+          show the monthly fee for only one row out of
+          12 rows along with the row for anual.'''
+
+        now = datetime.datetime.now().month
+        queryset = queryset.filter(Q(month__month=now) | Q(month=None))
       else:
         queryset = queryset
       return queryset
@@ -343,6 +355,7 @@ class FetchFees(APIView):
           fees_response[key]['concessionAmount'] = concessionAmount
           fees_response[key]['concessionId'] = concessionObject.get('id') if concessionObject else None
           fees_response[key]['balanceAmount'] = float(balanceObject.balance_amount) - float(concessionAmount) if balanceObject else float(fees.get('feeAmount')) - float(concessionAmount)
+          print(type(balanceObject),'line-208')
       return response.Response(fees_response)
 
 

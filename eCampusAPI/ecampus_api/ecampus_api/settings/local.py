@@ -17,8 +17,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ideal_school',
         'HOST': '',
-        'USER': 'djangoUser',
-        'PASSWORD': 'password1',
+        'USER': 'surya-dev',
+        'PASSWORD': '111111',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
