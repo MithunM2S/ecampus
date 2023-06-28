@@ -141,7 +141,9 @@ class SearchStudent(APIView):
                                                                                      fatherName=F('father_name'),
                                                                                      quotaId=F('student__quota'),
                                                                                      ).filter(Q(father_name__icontains=search_text) | Q(father_mobile=search_text) | Q(student__student_id=search_text)
-                                                                                              | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
+                                                                                    | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
+        
+            
             if status == 'active':
                 queryset = queryset.filter(student__is_active=True)
             elif status == 'inactive':

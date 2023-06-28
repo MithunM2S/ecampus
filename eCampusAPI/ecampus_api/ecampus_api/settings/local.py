@@ -15,10 +15,10 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ideal_school',
+        'NAME': 'ideal_school_final_production',
         'HOST': '',
-        'USER': 'surya-dev',
-        'PASSWORD': '111111',
+        'USER': 'djangoUser',
+        'PASSWORD': 'password1',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
