@@ -20,7 +20,7 @@ from master import services
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    
+    permission_classes = [AllowAny]
     queryset = student_model.Profile.objects.all().filter()
     serializer_class = student_serializer.ProfileSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -63,6 +63,16 @@ class ProfileViewSet(viewsets.ModelViewSet):
         else:
             return super(ProfileViewSet, self).get_serializer_class()
 
+
+    # def list(self, serializer):
+    #     filter_params = self.request.query_params
+        
+    #     if filter_params:
+    #         queryset = self.queryset.filter(admission_academic_year = filter_params['academic_year'])
+    #         serializer = self.get_serializer(queryset, many=True)
+    #         return response.Response(serializer.data)
+    #     return response.Response({'data' : 'hello from get'})
+    
     def perform_create(self, serializer):
         admission_academic_year = self.request.data.get('admission_academic_year', None)
         class_id =  self.request.data.get('class_name', None)
@@ -223,14 +233,25 @@ class AddExistingStudent(APIView):
                         email_address = data['father_email'] #email id intial to father if primary contact is mother it will be set to mother
                     else:
                         email_address = data['mother_email']
-                    application_instance = application_serializer.save(application_token=application_token, email_address=email_address, student_name=data['first_name'])
+                    application_instance = application_serializer.save(application_token=application_token, 
+                                                                       email_address=email_address, 
+                                                                       student_name=data['first_name'],
+                                                                       is_verified=True,
+                                                                       is_docs_verified=True,
+                                                                       mode=False
+                                                                       )
                     application_id = application_instance.id #phase 1 is over
                     print('phase 1 is over')
                     #once the application is created we have to create student profile
                     profile_serializer = student_serializer.AddExistingStudentProfileSerializer(data=data, partial=True)
                     
+                    # print(profile_serializer)
                     if profile_serializer.is_valid():
+                        # print(profile_serializer)
+                        print('its working line 234')
                         student_id = 1000 + self.student_profile_query_set.count() + 1
+                       
+                        
                         profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, 
                                                                    admission_number=data['admission_number'], 
                                                                    admission_academic_year=data['academic_year'],
@@ -248,8 +269,10 @@ class AddExistingStudent(APIView):
                             
                         else:
                             data = {'message': parent_serializer.errors}
+                            # print(data)
                             return response.Response(parent_serializer.errors, status=422)
                     else:
+                        print(profile_serializer.errors)
                         return response.Response(profile_serializer.errors, status=422)
                 else:
                     return response.Response(application_serializer.errors, status=422) 
