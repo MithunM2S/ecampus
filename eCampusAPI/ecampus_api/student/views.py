@@ -238,7 +238,7 @@ class AddExistingStudent(APIView):
                                                                        student_name=data['first_name'],
                                                                        is_verified=True,
                                                                        is_docs_verified=True,
-                                                                       mode=False
+                                                                       mode=False 
                                                                        )
                     application_id = application_instance.id #phase 1 is over
                     print('phase 1 is over')
@@ -265,7 +265,7 @@ class AddExistingStudent(APIView):
                             parent_instance = parent_serializer.save(student_id=student_foreign_key_id)
                             #phase 3 is over now we have to add data to student history
                             student_model.History.objects.create(student=profile_instance, from_class=data['class_name'], from_academic_year=data['academic_year'])
-                            return response.Response({"message" : "student added successfully"}, status=200)
+                            return response.Response({"message" : "student added successfully", "student_id" : student_id}, status=200)
                             
                         else:
                             data = {'message': parent_serializer.errors}
