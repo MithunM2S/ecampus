@@ -77,6 +77,7 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def get_queryset(self):
     queryset =  super().get_queryset()
     queryset = queryset.order_by('created_on')
+    print(queryset, '..80')
     return queryset
 
 
@@ -340,9 +341,16 @@ class FetchFees(APIView):
           mont=F('month')
         ).filter(
           (Q(class_name=student.class_name) | Q(student=student.id)),
-          fee_category=fee_category_id,
           quota=student.quota,
           ).order_by('id')
+        
+        '''
+        this if statement will avail to filter conditionally on fee_category
+        '''
+
+        if fee_category_id:
+          queryset = queryset.filter(
+          fee_category=fee_category_id).order_by('id')
         
         
         fees_response = queryset 
@@ -563,6 +571,12 @@ class FeeMasterCollectionViewset(mixins.ListModelMixin, mixins.RetrieveModelMixi
               'bill_number':['exact'],
               'created_on':['gte', 'lte'],
   }
+
+  # def list(self, request, *args, **kwargs):
+  #   collection_report = generate_collection_report(self.request, self.queryset, self.filter_queryset, self.paginate_queryset)
+  #   response = super().list(request, args, kwargs)
+  #   response.data['results'] = collection_report
+  #   return response
 
 
 class DailyReportViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
