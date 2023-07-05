@@ -349,7 +349,7 @@ class FetchFees(APIView):
         this if statement will avail to filter conditionally on fee_category
         '''
 
-        if fee_category_id:
+        if int(fee_category_id):
           queryset = queryset.filter(
           fee_category=fee_category_id).order_by('id')
         
@@ -364,7 +364,6 @@ class FetchFees(APIView):
           fees_response[key]['concessionAmount'] = concessionAmount
           fees_response[key]['concessionId'] = concessionObject.get('id') if concessionObject else None
           fees_response[key]['balanceAmount'] = float(balanceObject.balance_amount) - float(concessionAmount) if balanceObject else float(fees.get('feeAmount')) - float(concessionAmount)
-          print(type(balanceObject),'line-208')
       return response.Response(fees_response)
 
 
