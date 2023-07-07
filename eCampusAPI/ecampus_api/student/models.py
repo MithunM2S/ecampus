@@ -95,6 +95,7 @@ class Profile(models.Model):
     created_by = models.IntegerField('Created By', default=0)
     created_on = models.DateTimeField(auto_now_add=True, null=True)
     is_active = models.BooleanField('Is active', default=True)
+    student_aadhar_number = models.BigIntegerField(null=True)
 
     class Meta:
         ordering = ['-id']
