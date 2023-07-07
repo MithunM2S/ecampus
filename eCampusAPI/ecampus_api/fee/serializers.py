@@ -186,6 +186,7 @@ class FeeCollectionSerializer(serializers.ModelSerializer):
 
 
 class FeeMasterCollectionSerializer(serializers.ModelSerializer):
+  
   class Meta:
     model = models.FeeMasterCollection
     fields = '__all__'
@@ -202,7 +203,7 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
         ).filter(
           id__in=[cid for cid in instance.fee_collections.split(",")]
       )
-      # print(response['fee_collections'])
+      
       # response['fee_collections'] = [int(cid) for cid in instance.fee_collections.split(",")]
       response['bill_number'] = instance.bill_number
       response['student'] = student_models.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(

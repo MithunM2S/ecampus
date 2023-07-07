@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db.models import Q, F, Sum, Count
-from student.models import Profile
+from student.models import Profile,ParentDetails
+# from student import models as student_models
 from rest_framework import response
 from master import services
 from student import services as student_services
@@ -570,13 +571,15 @@ class FeeMasterCollectionViewset(mixins.ListModelMixin, mixins.RetrieveModelMixi
               'bill_number':['exact'],
               'created_on':['gte', 'lte'],
   }
-
-  # def list(self, request, *args, **kwargs):
-  #   collection_report = generate_collection_report(self.request, self.queryset, self.filter_queryset, self.paginate_queryset)
-  #   response = super().list(request, args, kwargs)
-  #   response.data['results'] = collection_report
-  #   return response
-
+  '''this function will return the response with adding grand total to it.
+  '''
+  def list(self, request, *args, **kwargs):
+    response = super().list(request, args, kwargs)
+    grand_total = 0    
+    for person in response.data['results']:
+      grand_total+=float(person['total_paid_amount'])
+    response.data['results']=[{'collectionData':response.data['results']},{'final_total_paid_amount':grand_total}]
+    return response
 
 class DailyReportViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
   lookup_fields = ('uuid')
@@ -890,6 +893,7 @@ class BillToBillReport(APIView):
     permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+      print('called .. ?')
       query_fee_category = request.query_params.get('feeCategory', None)
       query_from_date = request.query_params.get('fromDate', None)
       query_to_date = request.query_params.get('toDate', None)
