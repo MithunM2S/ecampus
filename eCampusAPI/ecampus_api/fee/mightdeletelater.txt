@@ -1,0 +1,20 @@
+endpoint : http://localhost:8000/fee/fee-to-class/
+
+request data: 
+{
+  "academic_year": "2023_2024",
+  "start_date": "2023-06-01",
+  "end_date": "2024-05-31",
+  "class_name": "19",
+  "section": "20",
+  "quota": "7",
+  "fee_category": "7",
+  "fee_type": "11",
+  "old_student_amount": 1000,
+  "new_student_amount": 1000
+}
+
+
+this is how it look converted dict looks like
+{'start_date': datetime.date(2023, 6, 1), 'end_date': datetime.date(2024, 5, 31), 'new_student_amount': Decimal('100.00'), 'old_student_amount': Decimal('110.00'), 'academic_year': '2023_2024', 'class_name': <ClassName: ClassName object (20)>, 'section': <Section: Section object (22)>, 'quota': <Quota: Quota object (7)>, 'fee_category': <FeeCategory: FeeCategory object (7)>, 'fee_type': <FeeType: FeeType object (9)>}
+

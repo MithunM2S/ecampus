@@ -10,3 +10,5 @@ urlpatterns = [
     path('submit-application/<id>/<application_token>/', SubmitDocsViewSet.as_view({'put':'update'}), name='submit_application'),
     path('approve-or-reject-doc/<id>/', ApproveOrRejectDoc.as_view({'put':'update'}), name='docs_verify'),
 ]
+
+

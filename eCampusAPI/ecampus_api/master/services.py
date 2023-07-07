@@ -10,7 +10,8 @@ from master.models import Profile, Repo, RepoClass, ClassName, AcademicYear
 from django.db.models import Q, Count
 from django.core.exceptions import ObjectDoesNotExist
 from fee import models as fee_models
-
+from master import serializers as master_serializer
+from typing import List, Dict
 
 def send_sms(number, message):
     message = message
@@ -22,8 +23,17 @@ def send_sms(number, message):
     return (response)
     # return True
 
-def get_academic_years():
+def get_academic_years() -> Dict[str, Dict[date, date]]:
     academic_years = {}
+    
+    '''
+    function which helps you to get a running and upcoming 
+    year from the profile object (instituion details will be store in 
+    the profile object)
+    return type is dict which contains running and upcoming year as key and 
+    value for the key is again a dictionary which contains start and end as key and date as values.
+    '''
+    
     try:
         academic = Profile.objects.values('id', 'running_academic_start', 'running_academic_end', 'upcoming_academic_start', 'upcoming_academic_end')[0]
         academic_years['running'] = {'start':academic.get('running_academic_start', None), 'end': academic.get('running_academic_end', None)}
@@ -33,7 +43,12 @@ def get_academic_years():
         academic_years['upcoming'] = {'start': None,'end': None}
     return academic_years
 
-def get_academic_years_key_value(type_of_year):
+def get_academic_years_key_value(type_of_year) -> List[str]:
+    '''
+    function which calls the get_academic_years(), and gets the running and
+    upcoming years and converts in the form of year_year (2022_2023)
+    which is basically startyear_endyear 
+    '''
     try:
         start_year, end_year = get_academic_years()[type_of_year]['start'].year, get_academic_years()[type_of_year]['end'].year
         key, value = str(start_year) +'_'+ str(end_year), str(start_year) +' - '+ str(end_year)
@@ -135,3 +150,20 @@ def check_academic_year(year):
         return True
     else:
         return False
+    
+def get_academic_year_string(start, end):
+    
+    '''
+    this function get the starting and ending 
+    academic year date and returns 
+    academic year string
+    '''
+    start_date = datetime.strptime(start,"%Y-%m-%d")
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+
+    return str(start_date.year) + "_" + str(end_date.year)
+    
+def get_institution_all_academic_year():
+    response_data = AcademicYear.objects.all().order_by('-academic_year')
+    serializer = master_serializer.AcademicYearSerializer(response_data, many=True)
+    return serializer.data

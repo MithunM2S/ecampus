@@ -14,7 +14,7 @@ class PreadmissionCountService(object):
         else:
             self.filter_acdemic_year = services.get_academic_years_key_value('running')[0]
         self.queryset = Application.objects.filter(academic_year=self.filter_acdemic_year)
-
+    
     # Get total application count
     # def get_total_application_count(self):
     #     total_application_count = self.queryset.count()

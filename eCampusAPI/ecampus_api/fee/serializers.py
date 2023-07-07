@@ -1,4 +1,4 @@
-from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
 from itertools import count
 import numpy as np
 from rest_framework import serializers
@@ -97,6 +97,9 @@ class FeeToClassUpdateSerializer(serializers.ModelSerializer):
     return validated_data
 
 
+
+
+
 class FeeToClassDetailSerializer(serializers.ModelSerializer):
   class Meta:
     model = models.FeeToClass
@@ -183,6 +186,7 @@ class FeeCollectionSerializer(serializers.ModelSerializer):
 
 
 class FeeMasterCollectionSerializer(serializers.ModelSerializer):
+  
   class Meta:
     model = models.FeeMasterCollection
     fields = '__all__'
@@ -194,11 +198,12 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
         feeId=F('id'),
         feeName=F('fee_to_class__fee_type__fee_type_name'),
         paidAmount=F('paid_amount'),
-        academicYear=F('academic_year')
+        academicYear=F('academic_year'),
+        month = F('fee_to_class__month')
         ).filter(
           id__in=[cid for cid in instance.fee_collections.split(",")]
       )
-      # print(response['fee_collections'])
+      
       # response['fee_collections'] = [int(cid) for cid in instance.fee_collections.split(",")]
       response['bill_number'] = instance.bill_number
       response['student'] = student_models.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(

@@ -12,6 +12,7 @@ router.register(r'mother-tongue', master_views.MotherTongueViewSet)
 urlpatterns = [
     path('academic-years/',master_views.AcademicYear.as_view(), name='current_academic_year'),
     path('list-academic-years/',master_views.ListAcademicYear.as_view(), name='list_academic_year'),
+    path('auto-add-academic-years/', master_views.auto_add_academic_year, name='auto-add-academic-year'),
     path('profile/list/', master_views.ProfileViewSet.as_view({'get':'list'}), name='list_profile'),
     path('profile/detail/<pk>/', master_views.ProfileViewSet.as_view({'get':'retrieve'}), name='profile'),
     path('profile/create/', master_views.ProfileViewSet.as_view({'post':'create'}), name='create_profile'),

@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db.models import Q, F, Sum, Count
-from student.models import Profile
+from student.models import Profile,ParentDetails
+# from student import models as student_models
 from rest_framework import response
 from master import services
 from student import services as student_services
@@ -19,6 +20,8 @@ import os
 from base import services as base_services
 from master.models import GroupConcat
 from django.db.models.functions import Substr
+
+import datetime
 
 
 class FeeGenericMixinViewSet(mixins.CreateModelMixin,
@@ -47,6 +50,11 @@ class FeeTypeViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     serializer.save(created_by=self.request.user.id)
 
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    return queryset
+  
 
 class FeeCategoryViewset(viewsets.ModelViewSet):
   queryset = fee_model.FeeCategory.objects.all()
@@ -66,6 +74,12 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     user = self.request.user.id
     serializer.save(created_by=user)
+    
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    print(queryset, '..80')
+    return queryset
 
 
 class FeeToClassViewset(viewsets.ModelViewSet):
@@ -105,16 +119,142 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       if filter_by == 'student':
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
-        queryset = queryset.filter(class_name__isnull=False)
+        # queryset = queryset.filter(class_name__isnull=False)
+        queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
+
+        '''below two lines will filter out the rows
+          based on the current month bcz every month
+          you having the same fee and client asked to
+          show the monthly fee for only one row out of
+          12 rows along with the row for anual.'''
+
+        now = datetime.datetime.now().month
+        queryset = queryset.filter(Q(month__month=now) | Q(month=None))
       else:
         queryset = queryset
       return queryset
 
   def perform_create(self, serializer):
+    '''
+    After we get the validated from the serializer,
+    we convert to dict to check if the fee_type is montly
+    if the fee type is montly we take start date and end date
+    and we create a FeeToClass instances.
+    
+    '''
+    data = dict(serializer.validated_data) #this is a validated data from the serialzier 
     user = self.request.user.id
-    serializer.save(created_by=user)
-
-
+    if data['fee_type'].fee_type == "monthly":
+        start_date = data['start_date'] #date object
+        end_date = data['end_date'] #date object
+        num_of_months = fee_services.calculate_month_difference(start_date, end_date)
+        print(num_of_months)
+        if num_of_months == 0: 
+          num_of_months = 1 
+          '''checking if the start and end date comes on the same month,
+          we are collecting fee only for that month therefore making it 1.'''
+        
+        month = start_date
+        if num_of_months > 1:
+          for i in range(0, num_of_months):
+            
+            fee_model.FeeToClass.objects.create(
+              start_date = start_date,
+              end_date = end_date,
+              class_name = data['class_name'],
+              section = data['section'],
+              quota = data['quota'],
+              fee_category = data['fee_category'],
+              fee_type = data['fee_type'],
+              new_student_amount = data['new_student_amount'],
+              old_student_amount = data['old_student_amount'],
+              created_by = user,
+              academic_year = data['academic_year'],
+              month = month   
+            )
+            if month.month == 12:
+              month = month.replace(month = 1, year = month.year + 1)
+            else:
+              month = month.replace(month = month.month + 1)
+        serializer.save(created_by=user, month=month)   
+    else:
+      serializer.save(created_by=user)
+      
+  # def perform_update(self, serializer):
+  #   return super().perform_update(serializer)
+  def perform_update(self, serializer):
+    '''
+    Monthly fee updation,
+    since annual fees updation happens only on one instance,
+    montly fees happens over all the instance of the month.
+    let's say you have 12 montly fee_to_class instance it 
+    updates over all.
+    '''
+    user = self.request.user.id
+    data = serializer.validated_data #contains all the validated data of the form 
+    fee_type_instance = data['fee_type']
+    if fee_type_instance.fee_type == "monthly":
+      class_instance = data['class_name']
+      quota = data['quota']
+      fee_category = data['fee_category']
+      start_date = data['start_date']
+      end_date = data['end_date']
+      queryset = fee_model.FeeToClass.objects.filter(class_name__id = class_instance.id,   
+                                              quota__id = quota.id, 
+                                              fee_type__id=fee_type_instance.id,
+                                              fee_category__id = fee_category.id).order_by('created_on')
+      num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
+      start_date = data['start_date']
+      for instance in queryset:
+        if num_of_months > 0:
+          instance.old_student_amount, instance.new_student_amount = data['old_student_amount'], data['new_student_amount'] 
+          instance.month = start_date
+          instance.save()
+    
+        
+          if start_date.month == 12:
+            start_date = start_date.replace(month = 1, year = start_date.year + 1)
+          else:
+            start_date = start_date.replace(month = start_date.month + 1)
+          num_of_months -= 1
+        else:
+          instance.delete()
+      
+      while num_of_months > 0:
+        '''
+            There may be cases where we have to create more
+            instances, let say there were only 5 instances before 
+            now if we change start date and end date, and if we have to create 10 instances 
+            5 instances will be already updated by the above code, but now we have to create 5 more 
+            new instances. This part will do it.
+        '''
+        
+        fee_model.FeeToClass.objects.create(start_date=data['start_date'],
+                                              end_date=data['end_date'],
+                                              class_name=data['class_name'],
+                                              section=data['section'],
+                                              quota=data['quota'],
+                                              fee_category=data['fee_category'],
+                                              fee_type=data['fee_type'],
+                                              new_student_amount=data['new_student_amount'],
+                                              old_student_amount=data['old_student_amount'],
+                                              created_by=user,
+                                              academic_year=data['academic_year'],
+                                              month=start_date)
+         
+       
+        if start_date.month == 12:
+            start_date = start_date.replace(month = 1, year = start_date.year + 1)
+         
+        else:
+            start_date = start_date.replace(month = start_date.month + 1)
+         
+        num_of_months -=1
+        
+    else:
+      return super().perform_update(serializer)
+    
+    
 class PaymentModeViewset(viewsets.ModelViewSet):
   queryset = fee_model.PaymentMode.objects.all()
   serializer_class = serializers.PaymentModeSerializer
@@ -129,6 +269,11 @@ class PaymentModeViewset(viewsets.ModelViewSet):
   def perform_create(self, serializer):
     user = self.request.user.id
     serializer.save(created_by=user)
+  
+  def get_queryset(self):
+    queryset =  super().get_queryset()
+    queryset = queryset.order_by('created_on')
+    return queryset
 
 
 # Fee Concession ViewSet
@@ -167,15 +312,18 @@ class FetchFees(APIView):
       up_academic_year = services.get_academic_years_key_value('upcoming')[0]
       academicYear = request.GET.get('academicYear', None)
       # fee_category = request.GET.get('feeCategory', None)
+      
       if not academicYear:
         academicYear = run_academic_year
       student = student_services.get_student(student_id)
+      
       if student:
         studentId = student.id
-        if student_services.get_student_state(student_id) ==   'new_student':
+        if student_services.get_student_state(student_id) ==   'new_student': #get student state helps to identify old and new student
           fee_amount_field = 'new_student_amount'
         else :
           fee_amount_field = 'old_student_amount'
+        
         queryset = fee_model.FeeToClass.objects.select_related('class_name', 'section', 'quota', 'fee_category', 'fee_type').values(
           feetoClassId=F('id'),
           academicYear=F('academic_year'),
@@ -191,12 +339,23 @@ class FetchFees(APIView):
           feeTypeName=F('fee_type__fee_type_name'),
           feeTypeId=F('fee_type__id'),
           feeAmount=F(fee_amount_field),
+          mont=F('month')
         ).filter(
           (Q(class_name=student.class_name) | Q(student=student.id)),
-          fee_category=fee_category_id,
           quota=student.quota,
           ).order_by('id')
+        
+        '''
+        this if statement will avail to filter conditionally on fee_category
+        '''
+
+        if int(fee_category_id):
+          queryset = queryset.filter(
+          fee_category=fee_category_id).order_by('id')
+        
+        
         fees_response = queryset 
+       
         # print(queryset)
         for key,fees in enumerate(fees_response):
           concessionObject = get_concession(student_id, fees.get('feetoClassId', 0), academicYear)
@@ -412,7 +571,15 @@ class FeeMasterCollectionViewset(mixins.ListModelMixin, mixins.RetrieveModelMixi
               'bill_number':['exact'],
               'created_on':['gte', 'lte'],
   }
-
+  '''this function will return the response with adding grand total to it.
+  '''
+  def list(self, request, *args, **kwargs):
+    response = super().list(request, args, kwargs)
+    grand_total = 0    
+    for person in response.data['results']:
+      grand_total+=float(person['total_paid_amount'])
+    response.data['results']=[{'collectionData':response.data['results']},{'final_total_paid_amount':grand_total}]
+    return response
 
 class DailyReportViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
   lookup_fields = ('uuid')
@@ -726,6 +893,7 @@ class BillToBillReport(APIView):
     permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+      print('called .. ?')
       query_fee_category = request.query_params.get('feeCategory', None)
       query_from_date = request.query_params.get('fromDate', None)
       query_to_date = request.query_params.get('toDate', None)
