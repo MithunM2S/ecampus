@@ -120,7 +120,9 @@ class FeeToClassViewset(viewsets.ModelViewSet):
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
         # queryset = queryset.filter(class_name__isnull=False)
-        queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
+        # class_id = self.request.query_params['class_name']
+        if 'class_name' in self.request.query_params:
+          queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
 
         '''below two lines will filter out the rows
           based on the current month bcz every month
