@@ -83,7 +83,7 @@ class ApplicationViewSet(ApplicationMixin):
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
             user  = self.request.user.id
-            mode = False
+            mode = True
             
         else:
             user = 0

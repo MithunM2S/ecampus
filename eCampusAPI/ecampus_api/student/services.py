@@ -55,10 +55,32 @@ class ProfileCountService(object):
         #     # print(data)
         # else:
         #     data = [{"old_student": old_student}]
-        if cards:
-            del cards[0]['admission_academic_year']
-            cards[0]['old_student'] = old_student
+        # if cards:
+        #     del cards[0]['admission_academic_year']
+        #     cards[0]['old_student'] = old_student
+        #     data = cards
+        if cards:            
+            current_year = self.filter_admission_academic_year
+            
+            data = {
+                'total_student' : 0,
+                'new_studnet' : 0,
+                'old_student' : 0
+                 }
+            
+
+            for years_wise_info in cards:
+                data['total_student'] += years_wise_info['total_student']
+                data['old_student'] = old_student
+                if years_wise_info['admission_academic_year'] == self.filter_admission_academic_year:
+                    data['new_studnet'] = years_wise_info['new_student']
+
+            cards[0]['old_student'] = data['old_student']
+            cards[0]['new_student'] = data['new_studnet']
+            cards[0]['total_student'] = data['total_student']
+            
             data = cards
+        
         else:
             data = [{"old_student": old_student}]
         return data
