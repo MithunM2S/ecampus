@@ -15,7 +15,7 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ihs_chiguru_bhavan_basaveshwaranagar',
+        'NAME': 'ihs_ganesha_building',
         'HOST': '',
         'USER': 'ihs',
         'PASSWORD': 'Password@1',

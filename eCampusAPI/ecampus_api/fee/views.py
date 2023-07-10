@@ -82,6 +82,7 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
 
 
 class FeeToClassViewset(viewsets.ModelViewSet):
+  permission_classes = [AllowAny]
   queryset = fee_model.FeeToClass.objects.all()
   serializer_class = serializers.FeeToClassSerializer
   filter_backends = [DjangoFilterBackend]
@@ -118,17 +119,20 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       if filter_by == 'student':
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
-        # queryset = queryset.filter(class_name__isnull=False)
-        queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
+       
+          
+          # queryset = queryset.filter(class_name__isnull=False)
+          queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
 
-        '''below two lines will filter out the rows
-          based on the current month bcz every month
-          you having the same fee and client asked to
-          show the monthly fee for only one row out of
-          12 rows along with the row for anual.'''
+          '''below two lines will filter out the rows
+            based on the current month bcz every month
+            you having the same fee and client asked to
+            show the monthly fee for only one row out of
+            12 rows along with the row for anual.'''
 
-        now = datetime.datetime.now().month
-        queryset = queryset.filter(Q(month__month=now) | Q(month=None))
+          now = datetime.datetime.now().month
+          queryset = queryset.filter(Q(month__month=now) | Q(month=None))
+        
       else:
         queryset = queryset
       return queryset

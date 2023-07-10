@@ -227,6 +227,7 @@ class AddExistingStudent(APIView):
 
         try:
             with transaction.atomic():
+                
                 if application_serializer.is_valid():
                     application_token = unique_token() 
                     if data['primary_contact_person'] == 'father':
@@ -248,7 +249,7 @@ class AddExistingStudent(APIView):
                     # print(profile_serializer)
                     if profile_serializer.is_valid():
                         # print(profile_serializer)
-                        print('its working line 234')
+                       
                         student_id = 1000 + self.student_profile_query_set.count() + 1
                        
                         
@@ -275,6 +276,7 @@ class AddExistingStudent(APIView):
                         print(profile_serializer.errors)
                         return response.Response(profile_serializer.errors, status=422)
                 else:
+                    print(application_serializer.errors)
                     return response.Response(application_serializer.errors, status=422) 
                     
                 
