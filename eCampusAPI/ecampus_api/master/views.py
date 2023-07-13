@@ -227,8 +227,11 @@ class ClassPredictor(APIView):
     permission_classes = [AllowAny, HasOrganizationAPIKey]
 
     def get(self,request,input_age):
-        queryset = master_models.ClassName.objects.values('id').filter(from_age__lte = input_age,to_age__gte = input_age)[0]
-        return Response(queryset)
+        queryset = master_models.ClassName.objects.values('id').filter(from_age__lte = input_age,to_age__gte = input_age)
+        if queryset:
+            return Response(queryset[0])
+        else:
+            return Response([{'id':1}]) #for invalid age
 
 class SubjectViewSet(MasterGenericMixinViewSet):
     queryset = master_models.Subject.objects.all()

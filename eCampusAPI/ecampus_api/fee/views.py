@@ -78,7 +78,6 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def get_queryset(self):
     queryset =  super().get_queryset()
     queryset = queryset.order_by('created_on')
-    print(queryset, '..80')
     return queryset
 
 
@@ -326,7 +325,6 @@ class FetchFees(APIView):
         else :
           fee_amount_field = 'old_student_amount'
         
-        print(student.quota)
         queryset = fee_model.FeeToClass.objects.select_related('class_name', 'section', 'quota', 'fee_category', 'fee_type').values(
           feetoClassId=F('id'),
           academicYear=F('academic_year'),

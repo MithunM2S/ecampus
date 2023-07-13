@@ -149,6 +149,7 @@ class SearchStudent(APIView):
                                                                                      sectionName=F(
                                                                                        'student__section__section_name'),
                                                                                      fatherName=F('father_name'),
+                                                                                     fatherMobile=F('father_mobile'),
                                                                                      quotaId=F('student__quota'),
                                                                                      ).filter(Q(father_name__icontains=search_text) | Q(father_mobile=search_text) | Q(student__student_id=search_text)
                                                                                     | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
