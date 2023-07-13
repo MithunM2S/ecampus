@@ -153,6 +153,7 @@ class CreateFeeConcessionSerializer(serializers.ModelSerializer):
       academic_year=validated_data['academic_year'],
       is_valid=True
       ).exists()
+    # print(isUnusedConcession)
     if isUnusedConcession:
         raise serializers.ValidationError({'student_id': "Already concession amout added."})
     return validated_data

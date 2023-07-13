@@ -78,7 +78,6 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def get_queryset(self):
     queryset =  super().get_queryset()
     queryset = queryset.order_by('created_on')
-    print(queryset, '..80')
     return queryset
 
 
@@ -828,6 +827,15 @@ def generate_dashboard_report(request):
   grand_total = 0
   fee_category_obj = fee_model.FeeCategory.objects.all()
   student_profile_queryset = Profile.objects.values('id')
+  print(
+    filter_class_group,
+    filter_class_name,
+    filter_section,
+    filter_fee_category,
+    filter_fee_type,
+    student_profile_queryset,
+    
+  )
   if filter_class_group:
     student_profile_queryset = student_profile_queryset.filter(class_group=filter_class_group)
   if filter_class_name:
@@ -836,7 +844,9 @@ def generate_dashboard_report(request):
     student_profile_queryset = student_profile_queryset.filter(section=filter_section)
   if filter_fee_category:
     fee_category_obj = fee_category_obj.filter(id=filter_fee_category)
+    
   fee_final_total_dict = {}
+  
   for fee_category in fee_category_obj:
     fee_dashboard = {}
     fee_dashboard['feeCategoryCompanyName'] = fee_category.company_name
