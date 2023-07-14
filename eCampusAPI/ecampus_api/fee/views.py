@@ -194,6 +194,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
     '''
     user = self.request.user.id
     data = serializer.validated_data #contains all the validated data of the form 
+    
     fee_type_instance = data['fee_type']
     if fee_type_instance.fee_type == "monthly":
       class_instance = data['class_name']
@@ -207,7 +208,9 @@ class FeeToClassViewset(viewsets.ModelViewSet):
                                               fee_category__id = fee_category.id).order_by('created_on')
       num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
       start_date = data['start_date']
+      print(len(queryset))
       for instance in queryset:
+        
         if num_of_months > 0:
           instance.old_student_amount, instance.new_student_amount = data['old_student_amount'], data['new_student_amount'] 
           instance.month = start_date

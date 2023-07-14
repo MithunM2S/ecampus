@@ -34,15 +34,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 'caste_category',
                 'caste',
                 'is_active',
+                
     ]
     search_fields = [
                 'admission_number',
-                'admission_on',
+                # 'admission_on',
                 'student_id',
                 'first_name',
                 'dob',
-                'student_mobile',
-                'current_address',
+
+                # 'student_mobile',
+                # 'current_address',
                 # 'father_name',
                 # 'father_mobile',
                 # 'mother_name',
@@ -50,6 +52,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 # 'guardian_name',
                 # 'guardian_mobile',
     ]
+    
     ordering_fields = [
         'created_on',
         'admission_academic_year',
@@ -62,16 +65,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return student_serializer.ProfileEditSerializer
         else:
             return super(ProfileViewSet, self).get_serializer_class()
-
-
-    # def list(self, serializer):
-    #     filter_params = self.request.query_params
-        
-    #     if filter_params:
-    #         queryset = self.queryset.filter(admission_academic_year = filter_params['academic_year'])
-    #         serializer = self.get_serializer(queryset, many=True)
-    #         return response.Response(serializer.data)
-    #     return response.Response({'data' : 'hello from get'})
     
     def perform_create(self, serializer):
         admission_academic_year = self.request.data.get('admission_academic_year', None)
