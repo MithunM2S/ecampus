@@ -149,7 +149,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
         start_date = data['start_date'] #date object
         end_date = data['end_date'] #date object
         num_of_months = fee_services.calculate_month_difference(start_date, end_date)
-        print(num_of_months)
+        # print(num_of_months)
         if num_of_months == 0: 
           num_of_months = 1 
           '''checking if the start and end date comes on the same month,

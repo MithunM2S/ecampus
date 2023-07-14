@@ -146,16 +146,23 @@ class CreateFeeConcessionSerializer(serializers.ModelSerializer):
   def validate(self, validated_data):
     if not services.check_academic_year(validated_data.get('academic_year')):
       raise serializers.ValidationError({'admission_academic_year': 'Academic year not exists'})
-
-    isUnusedConcession = models.FeeConcession.objects.filter(
+    
+    models.FeeConcession.objects.filter(
       student_id=validated_data['student_id'],
       fee_to_class=validated_data['fee_to_class'],
       academic_year=validated_data['academic_year'],
       is_valid=True
-      ).exists()
+      ).delete()
+
+    # isUnusedConcession = models.FeeConcession.objects.filter(
+    #   student_id=validated_data['student_id'],
+    #   fee_to_class=validated_data['fee_to_class'],
+    #   academic_year=validated_data['academic_year'],
+    #   is_valid=True
+    #   ).exists()
     # print(isUnusedConcession)
-    if isUnusedConcession:
-        raise serializers.ValidationError({'student_id': "Already concession amout added."})
+    # if isUnusedConcession:
+    #     raise serializers.ValidationError({'student_id': "Already concession amout added."})
     return validated_data
 
 class CreateFeeCollectionSerializer(serializers.ModelSerializer):
