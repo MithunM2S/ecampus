@@ -82,6 +82,7 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
 
 
 class FeeToClassViewset(viewsets.ModelViewSet):
+  permission_classes = [AllowAny]
   queryset = fee_model.FeeToClass.objects.all()
   serializer_class = serializers.FeeToClassSerializer
   filter_backends = [DjangoFilterBackend]
