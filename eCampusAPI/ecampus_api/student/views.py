@@ -43,12 +43,12 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 'dob',
                 'student_mobile',
                 'current_address',
-                'father_name',
-                'father_mobile',
-                'mother_name',
-                'mother_mobile',
-                'guardian_name',
-                'guardian_mobile',
+                # 'father_name',
+                # 'father_mobile',
+                # 'mother_name',
+                # 'mother_mobile',
+                # 'guardian_name',
+                # 'guardian_mobile',
     ]
     ordering_fields = [
         'created_on',

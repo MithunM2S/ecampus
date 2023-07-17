@@ -344,6 +344,7 @@ class FetchFees(APIView):
         ).filter(
           (Q(class_name=student.class_name) | Q(student=student.id)),
           quota=student.quota,
+          section_id=student.section_id,
           ).order_by('id')
         
         '''
