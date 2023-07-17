@@ -202,13 +202,15 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       fee_category = data['fee_category']
       start_date = data['start_date']
       end_date = data['end_date']
+      section = data['section']
       queryset = fee_model.FeeToClass.objects.filter(class_name__id = class_instance.id,   
                                               quota__id = quota.id, 
                                               fee_type__id=fee_type_instance.id,
-                                              fee_category__id = fee_category.id).order_by('created_on')
+                                              fee_category__id = fee_category.id,
+                                              section__id= section.id ).order_by('created_on')
       num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
       start_date = data['start_date']
-      print(len(queryset))
+      
       for instance in queryset:
         
         if num_of_months > 0:

@@ -17,8 +17,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ihs_chintana_bhavan_manjunath_nagar_production_db',
         'HOST': '',
-        'USER': 'surya-dev',
-        'PASSWORD': '111111',
+        'USER': 'ihs',
+        'PASSWORD': 'Password@1',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
