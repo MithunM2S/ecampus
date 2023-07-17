@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db.models import Q, F, Sum, Count
-from student.models import Profile
+from student.models import Profile,ParentDetails
+# from student import models as student_models
 from rest_framework import response
 from master import services
 from student import services as student_services
@@ -77,7 +78,6 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
   def get_queryset(self):
     queryset =  super().get_queryset()
     queryset = queryset.order_by('created_on')
-    print(queryset, '..80')
     return queryset
 
 
@@ -119,20 +119,19 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       if filter_by == 'student':
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
-       
-          
-          # queryset = queryset.filter(class_name__isnull=False)
+        # queryset = queryset.filter(class_name__isnull=False)
+        # class_id = self.request.query_params['class_name']
+        if 'class_name' in self.request.query_params:
           queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
 
-          '''below two lines will filter out the rows
-            based on the current month bcz every month
-            you having the same fee and client asked to
-            show the monthly fee for only one row out of
-            12 rows along with the row for anual.'''
+        '''below two lines will filter out the rows
+          based on the current month bcz every month
+          you having the same fee and client asked to
+          show the monthly fee for only one row out of
+          12 rows along with the row for anual.'''
 
-          now = datetime.datetime.now().month
-          queryset = queryset.filter(Q(month__month=now) | Q(month=None))
-        
+        now = datetime.datetime.now().month
+        queryset = queryset.filter(Q(month__month=now) | Q(month=None))
       else:
         queryset = queryset
       return queryset
@@ -151,7 +150,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
         start_date = data['start_date'] #date object
         end_date = data['end_date'] #date object
         num_of_months = fee_services.calculate_month_difference(start_date, end_date)
-        print(num_of_months)
+        # print(num_of_months)
         if num_of_months == 0: 
           num_of_months = 1 
           '''checking if the start and end date comes on the same month,
@@ -327,7 +326,6 @@ class FetchFees(APIView):
         else :
           fee_amount_field = 'old_student_amount'
         
-        print(student.quota)
         queryset = fee_model.FeeToClass.objects.select_related('class_name', 'section', 'quota', 'fee_category', 'fee_type').values(
           feetoClassId=F('id'),
           academicYear=F('academic_year'),
@@ -347,6 +345,7 @@ class FetchFees(APIView):
         ).filter(
           (Q(class_name=student.class_name) | Q(student=student.id)),
           quota=student.quota,
+          section_id=student.section_id,
           ).order_by('id')
         
         '''
@@ -575,13 +574,15 @@ class FeeMasterCollectionViewset(mixins.ListModelMixin, mixins.RetrieveModelMixi
               'bill_number':['exact'],
               'created_on':['gte', 'lte'],
   }
-
-  # def list(self, request, *args, **kwargs):
-  #   collection_report = generate_collection_report(self.request, self.queryset, self.filter_queryset, self.paginate_queryset)
-  #   response = super().list(request, args, kwargs)
-  #   response.data['results'] = collection_report
-  #   return response
-
+  '''this function will return the response with adding grand total to it.
+  '''
+  def list(self, request, *args, **kwargs):
+    response = super().list(request, args, kwargs)
+    grand_total = 0    
+    for person in response.data['results']:
+      grand_total+=float(person['total_paid_amount'])
+    response.data['results']=[{'collectionData':response.data['results']},{'final_total_paid_amount':grand_total}]
+    return response
 
 class DailyReportViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
   lookup_fields = ('uuid')
@@ -906,6 +907,7 @@ class BillToBillReport(APIView):
     permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+      print('called .. ?')
       query_fee_category = request.query_params.get('feeCategory', None)
       query_from_date = request.query_params.get('fromDate', None)
       query_to_date = request.query_params.get('toDate', None)

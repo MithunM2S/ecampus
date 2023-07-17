@@ -43,12 +43,12 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 'dob',
                 'student_mobile',
                 'current_address',
-                'father_name',
-                'father_mobile',
-                'mother_name',
-                'mother_mobile',
-                'guardian_name',
-                'guardian_mobile',
+                # 'father_name',
+                # 'father_mobile',
+                # 'mother_name',
+                # 'mother_mobile',
+                # 'guardian_name',
+                # 'guardian_mobile',
     ]
     ordering_fields = [
         'created_on',
@@ -149,6 +149,7 @@ class SearchStudent(APIView):
                                                                                      sectionName=F(
                                                                                        'student__section__section_name'),
                                                                                      fatherName=F('father_name'),
+                                                                                     fatherMobile=F('father_mobile'),
                                                                                      quotaId=F('student__quota'),
                                                                                      ).filter(Q(father_name__icontains=search_text) | Q(father_mobile=search_text) | Q(student__student_id=search_text)
                                                                                     | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
