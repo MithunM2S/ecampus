@@ -246,11 +246,12 @@ class AddExistingStudent(APIView):
                        
                         student_id = 1000 + self.student_profile_query_set.count() + 1
 
-                        if 'admission_number' not in data:
-                            data['admission_number'] = self.student_profile_query_set.order_by('-admission_number')[0].admission_number + 1
+                        if ('admission_number' in data) and (self.student_profile_query_set.filter(admission_number=int(data['admission_number'])).exists()):
+                            transaction.set_rollback(True)
+                            return response.Response({'detail' : 'student admission number already exist'}, status=409)
                         
                         profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, 
-                                                                   admission_number=data['admission_number'], 
+                                                                #    admission_number=data['admission_number'], 
                                                                    admission_academic_year=data['academic_year'],
                                                                    primary_contact=data['primary_contact_person'])
                         #phase 2 is over now have to add have to map parent to student
