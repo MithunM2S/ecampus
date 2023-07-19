@@ -245,7 +245,9 @@ class AddExistingStudent(APIView):
                         # print(profile_serializer)
                        
                         student_id = 1000 + self.student_profile_query_set.count() + 1
-                       
+
+                        if 'admission_number' not in data:
+                            data['admission_number'] = self.student_profile_query_set.order_by('-admission_number')[0].admission_number + 1
                         
                         profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, 
                                                                    admission_number=data['admission_number'], 
@@ -276,7 +278,7 @@ class AddExistingStudent(APIView):
                 
         except IntegrityError as e:
             transaction.set_rollback(True)
-            return response.Response({'message' : 'student admission number already exist'}, status=422)
+            return response.Response({'detail' : 'student admission number already exist'}, status=409)
         except Exception as e:
             print(e)
             return response.Response({'message': 'some error has occured'}, status=422)    
