@@ -189,4 +189,9 @@ class AcademicYearSerializer(serializers.ModelSerializer):
     #         raise serializers.ValidationError('Academic year already exists')
        
     #     return data
-        
+
+class StudentRegisterFieldsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = master_models.StudentRegisterFields
+        fields = ['id', 'field','is_mandatory']

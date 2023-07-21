@@ -8,6 +8,7 @@ router.register(r'gender', master_views.GenderViewSet)
 router.register(r'quota', master_views.QuotaViewSet)
 router.register(r'religion', master_views.ReligionViewSet)
 router.register(r'mother-tongue', master_views.MotherTongueViewSet)
+router.register(r'register-fields', master_views.StudentRegisterFieldsViewSet)
 
 urlpatterns = [
     path('academic-years/',master_views.AcademicYear.as_view(), name='current_academic_year'),

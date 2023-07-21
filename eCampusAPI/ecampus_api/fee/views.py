@@ -82,6 +82,7 @@ class FeeCategoryViewset(viewsets.ModelViewSet):
 
 
 class FeeToClassViewset(viewsets.ModelViewSet):
+  permission_classes = [AllowAny]
   queryset = fee_model.FeeToClass.objects.all()
   serializer_class = serializers.FeeToClassSerializer
   filter_backends = [DjangoFilterBackend]
@@ -193,6 +194,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
     '''
     user = self.request.user.id
     data = serializer.validated_data #contains all the validated data of the form 
+    
     fee_type_instance = data['fee_type']
     if fee_type_instance.fee_type == "monthly":
       class_instance = data['class_name']
@@ -200,13 +202,17 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       fee_category = data['fee_category']
       start_date = data['start_date']
       end_date = data['end_date']
+      section = data['section']
       queryset = fee_model.FeeToClass.objects.filter(class_name__id = class_instance.id,   
                                               quota__id = quota.id, 
                                               fee_type__id=fee_type_instance.id,
-                                              fee_category__id = fee_category.id).order_by('created_on')
+                                              fee_category__id = fee_category.id,
+                                              section__id= section.id ).order_by('created_on')
       num_of_months = fee_services.calculate_month_difference(start_date=start_date, end_date=end_date) + 1
       start_date = data['start_date']
+      
       for instance in queryset:
+        
         if num_of_months > 0:
           instance.old_student_amount, instance.new_student_amount = data['old_student_amount'], data['new_student_amount'] 
           instance.month = start_date

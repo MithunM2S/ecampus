@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny
 from master.services import get_academic_years, update_repo, get_all_academic_years, get_academic_year_string, get_institution_all_academic_year
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action, api_view, permission_classes
+from django.db import connection
 
 
 class MasterGenericMixinViewSet(mixins.CreateModelMixin,
@@ -23,8 +24,7 @@ class MasterGenericMixinViewSet(mixins.CreateModelMixin,
                                 pass
 
 class AcademicYear(APIView):
-    # permission_classes = [AllowAny, HasOrganizationAPIKey]
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny, HasOrganizationAPIKey]
     serializer_class = serializers.AcademicYearSerializer
 
     def get(self, request):
@@ -261,8 +261,7 @@ class MotherTongueViewSet(MasterGenericMixinViewSet):
     # http_method_names = ['get', 'post']
 
 class ListAcademicYear(APIView):
-    # permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
-    permission_classes = [AllowAny]
+    permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request):
         return Response(get_institution_all_academic_year())
@@ -296,5 +295,23 @@ def auto_add_academic_year(request):
             return {'message' : 'there\'s no existing year please add atleast one academci year to auto add'}
         except:
             return {'message' : 'Internal server error'}
-        
+
+class StudentRegisterFieldsViewSet(MasterGenericMixinViewSet):
+    permission_classes = [AllowAny]
+
+    def create_def(*args,**kwargs):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO master_studentregisterfields VALUES (1,'student-aadhar-number',True);
+                    """
+                )
+        except Exception as e:
+            print(e)
+
+    queryset = master_models.StudentRegisterFields.objects.all()
+    if not queryset:
+        create_def()
+    serializer_class = serializers.StudentRegisterFieldsSerializer
         

@@ -34,15 +34,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 'caste_category',
                 'caste',
                 'is_active',
+                
     ]
     search_fields = [
                 'admission_number',
-                'admission_on',
+                # 'admission_on',
                 'student_id',
                 'first_name',
                 'dob',
-                'student_mobile',
-                'current_address',
+
+                # 'student_mobile',
+                # 'current_address',
                 # 'father_name',
                 # 'father_mobile',
                 # 'mother_name',
@@ -50,6 +52,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 # 'guardian_name',
                 # 'guardian_mobile',
     ]
+    
     ordering_fields = [
         'created_on',
         'admission_academic_year',
@@ -62,16 +65,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return student_serializer.ProfileEditSerializer
         else:
             return super(ProfileViewSet, self).get_serializer_class()
-
-
-    # def list(self, serializer):
-    #     filter_params = self.request.query_params
-        
-    #     if filter_params:
-    #         queryset = self.queryset.filter(admission_academic_year = filter_params['academic_year'])
-    #         serializer = self.get_serializer(queryset, many=True)
-    #         return response.Response(serializer.data)
-    #     return response.Response({'data' : 'hello from get'})
     
     def perform_create(self, serializer):
         admission_academic_year = self.request.data.get('admission_academic_year', None)
@@ -228,6 +221,7 @@ class AddExistingStudent(APIView):
 
         try:
             with transaction.atomic():
+                
                 if application_serializer.is_valid():
                     application_token = unique_token() 
                     if data['primary_contact_person'] == 'father':
@@ -249,7 +243,7 @@ class AddExistingStudent(APIView):
                     # print(profile_serializer)
                     if profile_serializer.is_valid():
                         # print(profile_serializer)
-                        print('its working line 234')
+                       
                         student_id = 1000 + self.student_profile_query_set.count() + 1
 
                         if ('admission_number' in data) and (self.student_profile_query_set.filter(admission_number=int(data['admission_number'])).exists()):
@@ -276,17 +270,19 @@ class AddExistingStudent(APIView):
                             # print(data)
                             return response.Response(parent_serializer.errors, status=422)
                     else:
-                        print(profile_serializer.errors)
-                        return response.Response(profile_serializer.errors, status=422)
+                        transaction.set_rollback(True)
+                        message = {'detail' : 'Invalid '+', '.join(profile_serializer.errors)}
+                        return response.Response(message, status=409)
                 else:
-                    return response.Response(application_serializer.errors, status=422) 
+                    message = {'detail' : 'Invalid '+', '.join(application_serializer.errors)}
+                    return response.Response(message, status=409) 
                     
                 
         except IntegrityError as e:
             transaction.set_rollback(True)
-            return response.Response({'detail' : 'student admission number already exist'}, status=409)
+            return response.Response({'message': 'some error has occured'}, status=422)
         except Exception as e:
-            print(e)
+            print(e,'here..')
             return response.Response({'message': 'some error has occured'}, status=422)    
 
 
