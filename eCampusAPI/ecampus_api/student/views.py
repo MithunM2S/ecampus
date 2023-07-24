@@ -267,7 +267,7 @@ class AddExistingStudent(APIView):
                             
                         else:
                             data = {'message': parent_serializer.errors}
-                            # print(data)
+                            print(data)
                             return response.Response(parent_serializer.errors, status=422)
                     else:
                         transaction.set_rollback(True)
@@ -280,6 +280,7 @@ class AddExistingStudent(APIView):
                 
         except IntegrityError as e:
             transaction.set_rollback(True)
+            print(e.args[1])
             return response.Response({'message': 'some error has occured'}, status=422)
         except Exception as e:
             print(e,'here..')

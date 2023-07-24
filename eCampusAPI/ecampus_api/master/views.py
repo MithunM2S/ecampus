@@ -298,6 +298,7 @@ def auto_add_academic_year(request):
 
 class StudentRegisterFieldsViewSet(MasterGenericMixinViewSet):
     permission_classes = [AllowAny]
+    http_method_names = ['get', 'post', 'put']
 
     def create_def(*args,**kwargs):
         try:

@@ -64,7 +64,7 @@ def save_file(sender, instance, created, **kwargs):
 
 class Profile(models.Model):
     application_id = models.PositiveIntegerField('Application Id', unique=True)
-    admission_number = models.TextField('Admission Number', null=True)
+    admission_number = models.CharField('Admission Number', null=True, unique=True, max_length=25)
     admission_on = models.DateTimeField(auto_now_add=True)
     admission_academic_year = models.CharField(max_length=9, validators=[MinLengthValidator(9), RegexValidator(regex='^[0-9_]*$')])
     student_id = models.CharField('Student Id', max_length=15, unique=True, editable=False)
