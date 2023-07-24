@@ -275,7 +275,7 @@ class AddExistingStudent(APIView):
                         return response.Response(message, status=409)
                 else:
                     message = {'detail' : 'Invalid '+', '.join(application_serializer.errors)}
-                    return response.Response(message, status=409) 
+                    return response.Response(message, status=409)
                     
                 
         except IntegrityError as e:
