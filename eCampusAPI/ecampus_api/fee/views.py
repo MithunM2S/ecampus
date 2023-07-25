@@ -829,26 +829,30 @@ def generate_dashboard_report(request):
   filter_section = request.query_params.get('section', None)
   filter_fee_category = request.query_params.get('feeCategory', None)
   filter_fee_type = request.query_params.get('feeTypes', None)
+  from_date = request.query_params.get('created_on__gte', None)
+  to_date = request.query_params.get('created_on__lte', None)+' 23:59:59'
   fee_dashboard_report = {}
   fee_dashboard_report['dashboardData'] = []
   grand_total = 0
   fee_category_obj = fee_model.FeeCategory.objects.all()
-  student_profile_queryset = Profile.objects.values('id')
-  print(
-    filter_class_group,
-    filter_class_name,
-    filter_section,
-    filter_fee_category,
-    filter_fee_type,
-    student_profile_queryset,
+  student_profile_queryset = Profile.objects.all()
+  # print(
+  #   from_date,
+  #   to_date,
+  #   filter_class_group,
+  #   filter_class_name,
+  #   filter_section,
+  #   filter_fee_category,
+  #   filter_fee_type,
+  #   len(student_profile_queryset),
     
-  )
+  # )
   if filter_class_group:
-    student_profile_queryset = student_profile_queryset.filter(class_group=filter_class_group)
+    student_profile_queryset = student_profile_queryset.filter(class_name__class_group__id=filter_class_group)
   if filter_class_name:
-    student_profile_queryset = student_profile_queryset.filter(class_name=filter_class_name)
+    student_profile_queryset = student_profile_queryset.filter(class_name__id=filter_class_name)
   if filter_section:
-    student_profile_queryset = student_profile_queryset.filter(section=filter_section)
+    student_profile_queryset = student_profile_queryset.filter(section__id=filter_section)
   if filter_fee_category:
     fee_category_obj = fee_category_obj.filter(id=filter_fee_category)
     
@@ -878,6 +882,8 @@ def generate_dashboard_report(request):
       payment_mode_total = 0
       for ptype in fee_model.PaymentMode.objects.all().order_by('id'):
         fee_collection_queryset = fee_model.FeeCollection.objects.filter(
+          created_on__gte=from_date,
+          created_on__lte=to_date,
           payment_mode=ptype.id,
           fee_to_class__in=fee_to_class_ids,
           student_id__in=student_profile_queryset).aggregate(totalSum=Sum('paid_amount'))
@@ -912,7 +918,6 @@ class BillToBillReport(APIView):
     permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-      print('called .. ?')
       query_fee_category = request.query_params.get('feeCategory', None)
       query_from_date = request.query_params.get('fromDate', None)
       query_to_date = request.query_params.get('toDate', None)

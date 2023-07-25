@@ -134,7 +134,8 @@ class SearchStudent(APIView):
         status = request.GET.get('status', None)
         search_response = {}
         if search_text:
-            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentName=F('student__first_name'),
+            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentFirstName=F('student__first_name'),
+                                                                                     studentLastName=F('student__last_name'),
                                                                                      studentId=F('student__student_id'),
                                                                                      status=F('student__is_active'),
                                                                                      className=F(
@@ -267,6 +268,7 @@ class AddExistingStudent(APIView):
                             
                         else:
                             data = {'message': parent_serializer.errors}
+                            transaction.set_rollback(True)
                             print(data)
                             return response.Response(parent_serializer.errors, status=422)
                     else:
@@ -274,6 +276,7 @@ class AddExistingStudent(APIView):
                         message = {'detail' : 'Invalid '+', '.join(profile_serializer.errors)}
                         return response.Response(message, status=409)
                 else:
+                    transaction.set_rollback(True)
                     message = {'detail' : 'Invalid '+', '.join(application_serializer.errors)}
                     return response.Response(message, status=409)
                     
@@ -283,6 +286,7 @@ class AddExistingStudent(APIView):
             print(e.args[1])
             return response.Response({'message': 'some error has occured'}, status=422)
         except Exception as e:
+            transaction.set_rollback(True)
             print(e,'here..')
             return response.Response({'message': 'some error has occured'}, status=422)    
 

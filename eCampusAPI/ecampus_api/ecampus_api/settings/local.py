@@ -15,10 +15,10 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ihs_chintana_bhavan_manjunath_nagar_production_db',
+        'NAME': 'ecampus',
         'HOST': '',
-        'USER': 'ihs',
-        'PASSWORD': 'Password@1',
+        'USER': 'surya-dev',
+        'PASSWORD': '111111',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
