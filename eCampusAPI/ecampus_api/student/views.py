@@ -134,7 +134,7 @@ class SearchStudent(APIView):
         status = request.GET.get('status', None)
         search_response = {}
         if search_text:
-            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentName=F('student__first_name'),
+            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentFirstName=F('student__first_name'),
                                                                                      studentLastName=F('student__last_name'),
                                                                                      studentId=F('student__student_id'),
                                                                                      status=F('student__is_active'),
