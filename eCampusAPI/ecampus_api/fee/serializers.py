@@ -215,7 +215,8 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
       # response['fee_collections'] = [int(cid) for cid in instance.fee_collections.split(",")]
       response['bill_number'] = instance.bill_number
       response['student'] = student_models.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(
-        studentName=F('student__first_name'),
+        studentFirstName=F('student__first_name'),
+        studentLastName=F('student__last_name'),
         className=F('student__class_name__class_name'),
         sectionName=F('student__section__section_name'),
         fatherName=F('father_name'),

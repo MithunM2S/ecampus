@@ -119,7 +119,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
       if filter_by == 'student':
         queryset = queryset.filter(student__isnull=False)
       elif filter_by == 'class':
-        # queryset = queryset.filter(class_name__isnull=False)
+        # queryset = queryset.filter(student__isnull=True)
         # class_id = self.request.query_params['class_name']
         if 'class_name' in self.request.query_params:
           queryset = queryset.filter(class_name_id=self.request.query_params['class_name'])
@@ -131,7 +131,7 @@ class FeeToClassViewset(viewsets.ModelViewSet):
           12 rows along with the row for anual.'''
 
         now = datetime.datetime.now().month
-        queryset = queryset.filter(Q(month__month=now) | Q(month=None))
+        queryset = queryset.filter(Q(month__month=now) | Q(month=None),student__isnull=True)
       else:
         queryset = queryset
       return queryset
