@@ -205,6 +205,7 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
       response['fee_collections'] = models.FeeCollection.objects.select_related('fee_to_class', 'fee_to_class__fee_type').values(
         feeId=F('id'),
         feeName=F('fee_to_class__fee_type__fee_type_name'),
+        feeType=F('fee_to_class__fee_type__fee_type'),
         paidAmount=F('paid_amount'),
         academicYear=F('academic_year'),
         month = F('fee_to_class__month')
