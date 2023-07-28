@@ -136,8 +136,11 @@ def get_related_feecategory(instanceObject, primary_field_name, second_field_nam
         related_dict = [{"id":instanceObject.id, "name":getattr(instanceObject, primary_field_name),"company_name":getattr(instanceObject, second_field_name)}] if hasattr(instanceObject, primary_field_name) else None
         if args:
             for arg in args:
-                for extra_field in arg:
-                    related_dict[0][extra_field] = getattr(instanceObject, extra_field) if hasattr(instanceObject, extra_field) else None
+                if not isinstance(arg,str):
+                    for extra_field in arg:
+                        related_dict[0][extra_field] = getattr(instanceObject, extra_field) if hasattr(instanceObject, extra_field) else None
+                else:
+                    related_dict[0][arg] = getattr(instanceObject, arg) if hasattr(instanceObject, arg) else None
         return related_dict
     return None
     
