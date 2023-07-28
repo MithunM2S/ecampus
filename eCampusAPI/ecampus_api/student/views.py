@@ -4,11 +4,11 @@ from rest_framework import viewsets, mixins
 # from eCampusAPI.ecampus_api.master.models import Profile
 from student import models as student_model, serializers as student_serializer
 from rest_framework import response, status
-from django.db import transaction, IntegrityError
+from django.db import transaction
 from master.models import Repo, ClassName, RepoClass
-from master.services import get_institution_prefix, unique_token
+from master.services import get_institution_prefix
 from django_filters.rest_framework import DjangoFilterBackend
-from student.services import ProfileCountService, get_student_state, delete_null_keys_if_present
+from student.services import ProfileCountService, get_student_state
 from rest_framework.views import APIView
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -20,7 +20,7 @@ from master import services
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    permission_classes = [AllowAny]
+    
     queryset = student_model.Profile.objects.all().filter()
     serializer_class = student_serializer.ProfileSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -34,25 +34,22 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 'caste_category',
                 'caste',
                 'is_active',
-                
     ]
     search_fields = [
                 'admission_number',
-                # 'admission_on',
+                'admission_on',
                 'student_id',
                 'first_name',
                 'dob',
-
-                # 'student_mobile',
-                # 'current_address',
-                # 'father_name',
-                # 'father_mobile',
-                # 'mother_name',
-                # 'mother_mobile',
-                # 'guardian_name',
-                # 'guardian_mobile',
+                'student_mobile',
+                'current_address',
+                'father_name',
+                'father_mobile',
+                'mother_name',
+                'mother_mobile',
+                'guardian_name',
+                'guardian_mobile',
     ]
-    
     ordering_fields = [
         'created_on',
         'admission_academic_year',
@@ -65,7 +62,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             return student_serializer.ProfileEditSerializer
         else:
             return super(ProfileViewSet, self).get_serializer_class()
-    
+
     def perform_create(self, serializer):
         admission_academic_year = self.request.data.get('admission_academic_year', None)
         class_id =  self.request.data.get('class_name', None)
@@ -134,8 +131,7 @@ class SearchStudent(APIView):
         status = request.GET.get('status', None)
         search_response = {}
         if search_text:
-            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentFirstName=F('student__first_name'),
-                                                                                     studentLastName=F('student__last_name'),
+            queryset = student_model.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(Id=F('student__id'), studentName=F('student__first_name'),
                                                                                      studentId=F('student__student_id'),
                                                                                      status=F('student__is_active'),
                                                                                      className=F(
@@ -143,12 +139,9 @@ class SearchStudent(APIView):
                                                                                      sectionName=F(
                                                                                        'student__section__section_name'),
                                                                                      fatherName=F('father_name'),
-                                                                                     fatherMobile=F('father_mobile'),
                                                                                      quotaId=F('student__quota'),
                                                                                      ).filter(Q(father_name__icontains=search_text) | Q(father_mobile=search_text) | Q(student__student_id=search_text)
-                                                                                    | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
-        
-            
+                                                                                              | Q(student__first_name__icontains=search_text) | Q(student__student_id=search_text) | Q(student__student_mobile=search_text))
             if status == 'active':
                 queryset = queryset.filter(student__is_active=True)
             elif status == 'inactive':
@@ -159,9 +152,6 @@ class SearchStudent(APIView):
                 queryset = queryset.filter(student__is_active=True)
             search_response = queryset
             for row, value in enumerate(search_response):
-                if (search_response[row]['studentLastName']==None):
-                    search_response[row]['studentLastName'] =''
-
                 search_response[row]['studentType'] = get_student_state(value.get('Id'))
 
         return response.Response(search_response)
@@ -208,89 +198,3 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         if self.action == 'create' or self.action == 'update':
             return student_serializer.AttendanceCreateOrUpdateSerializer
         return super(AttendanceViewSet, self).get_serializer_class()
-
-
-class AddExistingStudent(APIView):
-
-    '''
-    Add Existing Student details
-    '''
-    student_profile_query_set = student_model.Profile.objects.all()
-    permission_classes = [AllowAny]
-
-    @transaction.atomic
-    def post(self, request):
-        data = delete_null_keys_if_present(request.data)
-        application_serializer = student_serializer.AddExistingStudentApplicationSerializer(data=data, partial=True) #Application Serializer
-
-        try:
-            with transaction.atomic():
-                
-                if application_serializer.is_valid():
-                    application_token = unique_token() 
-                    if data['primary_contact_person'] == 'father':
-                        email_address = data['father_email'] #email id intial to father if primary contact is mother it will be set to mother
-                    else:
-                        email_address = data['mother_email']
-                    application_instance = application_serializer.save(application_token=application_token, 
-                                                                       email_address=email_address, 
-                                                                       student_name=data['first_name'],
-                                                                       is_verified=True,
-                                                                       is_docs_verified=True,
-                                                                       mode=False 
-                                                                       )
-                    application_id = application_instance.id #phase 1 is over
-                    print('phase 1 is over')
-                    #once the application is created we have to create student profile
-                    profile_serializer = student_serializer.AddExistingStudentProfileSerializer(data=data, partial=True)
-                    
-                    # print(profile_serializer)
-                    if profile_serializer.is_valid():
-                        # print(profile_serializer)
-                       
-                        student_id = 1000 + self.student_profile_query_set.count() + 1
-
-                        if ('admission_number' in data) and (self.student_profile_query_set.filter(admission_number=int(data['admission_number'])).exists()):
-                            transaction.set_rollback(True)
-                            return response.Response({'detail' : 'student admission number already exist'}, status=409)
-                        
-                        profile_instance = profile_serializer.save(application_id=application_id, student_id=student_id, 
-                                                                #    admission_number=data['admission_number'], 
-                                                                   admission_academic_year=data['academic_year'],
-                                                                   primary_contact=data['primary_contact_person'])
-                        #phase 2 is over now have to add have to map parent to student
-                        print('phase 2 is over') 
-                        student_foreign_key_id = profile_instance.id
-                        parent_serializer = student_serializer.ParentDetailsSerializer(data=data, partial=True)
-
-                        if parent_serializer.is_valid():
-                            parent_instance = parent_serializer.save(student_id=student_foreign_key_id)
-                            #phase 3 is over now we have to add data to student history
-                            student_model.History.objects.create(student=profile_instance, from_class=data['class_name'], from_academic_year=data['academic_year'])
-                            return response.Response({"message" : "student added successfully", "student_id" : student_id}, status=200)
-                            
-                        else:
-                            data = {'message': parent_serializer.errors}
-                            transaction.set_rollback(True)
-                            print(data)
-                            return response.Response(parent_serializer.errors, status=422)
-                    else:
-                        transaction.set_rollback(True)
-                        message = {'detail' : 'Invalid '+', '.join(profile_serializer.errors)}
-                        return response.Response(message, status=409)
-                else:
-                    transaction.set_rollback(True)
-                    message = {'detail' : 'Invalid '+', '.join(application_serializer.errors)}
-                    return response.Response(message, status=409)
-                    
-                
-        except IntegrityError as e:
-            transaction.set_rollback(True)
-            print(e.args[1])
-            return response.Response({'message': 'some error has occured'}, status=422)
-        except Exception as e:
-            transaction.set_rollback(True)
-            print(e,'here..')
-            return response.Response({'message': 'some error has occured'}, status=422)    
-
-

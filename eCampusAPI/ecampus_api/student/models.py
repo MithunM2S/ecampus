@@ -64,12 +64,12 @@ def save_file(sender, instance, created, **kwargs):
 
 class Profile(models.Model):
     application_id = models.PositiveIntegerField('Application Id', unique=True)
-    admission_number = models.CharField('Admission Number', null=True, unique=True, max_length=25)
+    admission_number = models.PositiveIntegerField('Admission Number', unique=True, editable=False)
     admission_on = models.DateTimeField(auto_now_add=True)
     admission_academic_year = models.CharField(max_length=9, validators=[MinLengthValidator(9), RegexValidator(regex='^[0-9_]*$')])
     student_id = models.CharField('Student Id', max_length=15, unique=True, editable=False)
-    first_name = models.CharField('First Name', validators=[MinLengthValidator(1), RegexValidator(regex='^[a-zA-Z ]*$')], max_length=60)
-    last_name = models.CharField('Last Name', validators=[MinLengthValidator(1), RegexValidator(regex='^[a-zA-Z ]*$')], max_length=60, null=True)
+    first_name = models.CharField('First Name', validators=[MinLengthValidator(3), RegexValidator(regex='^[a-zA-Z ]*$')], max_length=60)
+    last_name = models.CharField('Last Name', validators=[MinLengthValidator(3), RegexValidator(regex='^[a-zA-Z ]*$')], max_length=60, null=True)
     gender = models.ForeignKey(Gender, on_delete=models.PROTECT)
     dob = models.DateField('Date of Birth')
     place_of_brith = models.CharField(max_length=35, null=True)
@@ -95,7 +95,6 @@ class Profile(models.Model):
     created_by = models.IntegerField('Created By', default=0)
     created_on = models.DateTimeField(auto_now_add=True, null=True)
     is_active = models.BooleanField('Is active', default=True)
-    student_aadhar_number = models.BigIntegerField(null=True, unique=True)
 
     class Meta:
         ordering = ['-id']

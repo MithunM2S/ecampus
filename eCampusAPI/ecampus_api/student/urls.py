@@ -1,7 +1,6 @@
 from django.urls import path, include
 from student.views import *
 from rest_framework import routers
-from .views import AddExistingStudent
 
 router = routers.SimpleRouter()
 router.register(r'attendance', AttendanceViewSet)
@@ -15,10 +14,7 @@ urlpatterns = [
     path('dashboard-service/', DashboardService.as_view(), name='dashboard_service'),
     path('search/', SearchStudent.as_view(), name='search_student'),
     path('set-status/<pk>', StudentStatus.as_view({'put': 'update'}), name='set_student_state'),
-    path('add-existing-student/', AddExistingStudent.as_view(), name='add-existing-student')
 ]
 
 #Appending routes
 urlpatterns += router.urls
-
-

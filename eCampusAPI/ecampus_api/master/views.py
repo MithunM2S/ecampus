@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from master import models as master_models
 from rest_framework import generics
 from rest_framework import viewsets, mixins
@@ -10,10 +10,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from api_authentication.permissions import HasOrganizationAPIKey
 from rest_framework.permissions import AllowAny
-from master.services import get_academic_years, update_repo, get_all_academic_years, get_academic_year_string, get_institution_all_academic_year
+from master.services import get_academic_years, update_repo, get_all_academic_years
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import action, api_view, permission_classes
-from django.db import connection
+from rest_framework.decorators import action
 
 
 class MasterGenericMixinViewSet(mixins.CreateModelMixin,
@@ -25,55 +24,9 @@ class MasterGenericMixinViewSet(mixins.CreateModelMixin,
 
 class AcademicYear(APIView):
     permission_classes = [AllowAny, HasOrganizationAPIKey]
-    serializer_class = serializers.AcademicYearSerializer
 
     def get(self, request):
         return Response(get_academic_years())
-    
-    def post(self, request):
-
-        #adding academic_year string as we get only start and end date
-        try:
-            request.data['academic_year'] = get_academic_year_string(request.data['start'], request.data['end'])
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(get_institution_all_academic_year())
-            else:
-                return Response(serializer.errors)
-        except:
-            return Response({
-                "data" : "Format for start or end date properly not recieved"
-            })
-    
-    def delete(self, request):
-        try:
-            academic_year = get_object_or_404(master_models.AcademicYear, id=request.data['id'])
-            if academic_year:
-                academic_year.delete()
-                return Response(get_institution_all_academic_year())
-        except:
-            return Response({
-                'data' : 'academic year doesn\'t exist'
-            })
-            
-        
-    def put(self, request):
-        try:
-            data = request.data
-            academic_year = get_object_or_404(master_models.AcademicYear, id=request.data['id'])
-            if academic_year:
-                request.data['academic_year'] = get_academic_year_string(request.data['start'], request.data['end'])
-                serializer = self.serializer_class(academic_year, data=data)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(get_institution_all_academic_year())
-                else:
-                    return Response(serializer.errors)
-        except:
-            return Response({'data' : 'the academic year doesn\'t exist'})
-        
-        
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = master_models.Profile.objects.all()
@@ -227,11 +180,8 @@ class ClassPredictor(APIView):
     permission_classes = [AllowAny, HasOrganizationAPIKey]
 
     def get(self,request,input_age):
-        queryset = master_models.ClassName.objects.values('id').filter(from_age__lte = input_age,to_age__gte = input_age)
-        if queryset:
-            return Response(queryset[0])
-        else:
-            return Response([{'id':1}]) #for invalid age
+        queryset = master_models.ClassName.objects.values('id').filter(from_age__lte = input_age,to_age__gte = input_age)[0]
+        return Response(queryset)
 
 class SubjectViewSet(MasterGenericMixinViewSet):
     queryset = master_models.Subject.objects.all()
@@ -264,55 +214,4 @@ class ListAcademicYear(APIView):
     permission_classes = [HasOrganizationAPIKey, IsAuthenticated]
 
     def get(self, request):
-        return Response(get_institution_all_academic_year())
-    
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def auto_add_academic_year(request):
-    
-    '''
-    This is a function which adds academic years automatically by
-    taking how many years you want to add automatically as input
-    '''
-    
-    if request.method == 'POST':
-        data = request.data
-        number_of_years = int(data['number_of_years'])
-        try:
-            existing_last_academic_year = master_models.AcademicYear.objects.order_by('start')[0]
-            existing_last_academic_year_start = existing_last_academic_year.start
-            existing_last_academic_year_end = existing_last_academic_year.end
-            print(existing_last_academic_year_start, existing_last_academic_year_end)
-            for i in range(1, number_of_years + 1):
-                start = existing_last_academic_year_start.replace(year = existing_last_academic_year_start.year - i)
-                end = existing_last_academic_year_end.replace(year = existing_last_academic_year_end.year - i)
-                academic_year = str(start.year) + "_" + str(end.year)
-                master_models.AcademicYear.objects.create(academic_year=academic_year, start=start,end=end)
-            return Response(get_institution_all_academic_year())
-        except master_models.AcademicYear.DoesNotExist:
-            return {'message' : 'there\'s no existing year please add atleast one academci year to auto add'}
-        except:
-            return {'message' : 'Internal server error'}
-
-class StudentRegisterFieldsViewSet(MasterGenericMixinViewSet):
-    permission_classes = [AllowAny]
-    http_method_names = ['get', 'post', 'put']
-
-    def create_def(*args,**kwargs):
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO master_studentregisterfields VALUES (1,'student-aadhar-number',True);
-                    """
-                )
-        except Exception as e:
-            print(e)
-
-    queryset = master_models.StudentRegisterFields.objects.all()
-    if not queryset:
-        create_def()
-    serializer_class = serializers.StudentRegisterFieldsSerializer
-        
+        return Response(get_all_academic_years())

@@ -72,7 +72,7 @@ class FeeToClass(models.Model):
   created_on = models.DateTimeField(auto_now_add=True, null=True)
   created_by = models.IntegerField('created by')
   academic_year = models.CharField(max_length=9, validators=[MinLengthValidator(9), RegexValidator(regex='^[0-9_]*$')])
-  month = models.DateField(null=True, blank=True) #helps in identifying which month fees belongs to.
+
   class Meta:
       ordering = ['-created_on']
 

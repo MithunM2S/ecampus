@@ -22,7 +22,7 @@ class Application(models.Model):
     primary_contact_person = models.CharField(choices=settings.PRIMARY_CONTACT_CHOICE, max_length=10)
     existing_parent = models.CharField('EXISTING PARENT', choices=settings.EXISTING_PARENT_CHOICES, max_length=3)
     query = models.TextField("Query", max_length=2000, blank=True)
-    mode = models.BooleanField('Mode', default=True) #mode represents whether the student is enquired offline or online
+    mode = models.BooleanField('Mode', default=True)
     is_verified = models.BooleanField('Is Verified', default=0)
     is_docs_verified = models.BooleanField('Is Docs Verified', default=False)
     is_applied = models.BooleanField('Is Applied', default=0)
