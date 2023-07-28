@@ -1,4 +1,4 @@
-# from asyncio.windows_events import NULL
+from asyncio.windows_events import NULL
 from itertools import count
 import numpy as np
 from rest_framework import serializers
@@ -97,9 +97,6 @@ class FeeToClassUpdateSerializer(serializers.ModelSerializer):
     return validated_data
 
 
-
-
-
 class FeeToClassDetailSerializer(serializers.ModelSerializer):
   class Meta:
     model = models.FeeToClass
@@ -146,23 +143,15 @@ class CreateFeeConcessionSerializer(serializers.ModelSerializer):
   def validate(self, validated_data):
     if not services.check_academic_year(validated_data.get('academic_year')):
       raise serializers.ValidationError({'admission_academic_year': 'Academic year not exists'})
-    
-    models.FeeConcession.objects.filter(
+
+    isUnusedConcession = models.FeeConcession.objects.filter(
       student_id=validated_data['student_id'],
       fee_to_class=validated_data['fee_to_class'],
       academic_year=validated_data['academic_year'],
       is_valid=True
-      ).delete()
-
-    # isUnusedConcession = models.FeeConcession.objects.filter(
-    #   student_id=validated_data['student_id'],
-    #   fee_to_class=validated_data['fee_to_class'],
-    #   academic_year=validated_data['academic_year'],
-    #   is_valid=True
-    #   ).exists()
-    # print(isUnusedConcession)
-    # if isUnusedConcession:
-    #     raise serializers.ValidationError({'student_id': "Already concession amout added."})
+      ).exists()
+    if isUnusedConcession:
+        raise serializers.ValidationError({'student_id': "Already concession amout added."})
     return validated_data
 
 class CreateFeeCollectionSerializer(serializers.ModelSerializer):
@@ -194,7 +183,6 @@ class FeeCollectionSerializer(serializers.ModelSerializer):
 
 
 class FeeMasterCollectionSerializer(serializers.ModelSerializer):
-  
   class Meta:
     model = models.FeeMasterCollection
     fields = '__all__'
@@ -205,19 +193,16 @@ class FeeMasterCollectionSerializer(serializers.ModelSerializer):
       response['fee_collections'] = models.FeeCollection.objects.select_related('fee_to_class', 'fee_to_class__fee_type').values(
         feeId=F('id'),
         feeName=F('fee_to_class__fee_type__fee_type_name'),
-        feeType=F('fee_to_class__fee_type__fee_type'),
         paidAmount=F('paid_amount'),
-        academicYear=F('academic_year'),
-        month = F('fee_to_class__month')
+        academicYear=F('academic_year')
         ).filter(
           id__in=[cid for cid in instance.fee_collections.split(",")]
       )
-      
+      # print(response['fee_collections'])
       # response['fee_collections'] = [int(cid) for cid in instance.fee_collections.split(",")]
       response['bill_number'] = instance.bill_number
       response['student'] = student_models.ParentDetails.objects.select_related('student', 'student__class_name', 'student__section').values(
-        studentFirstName=F('student__first_name'),
-        studentLastName=F('student__last_name'),
+        studentName=F('student__first_name'),
         className=F('student__class_name__class_name'),
         sectionName=F('student__section__section_name'),
         fatherName=F('father_name'),

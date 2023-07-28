@@ -169,29 +169,3 @@ class MotherTongueSerializer(serializers.ModelSerializer):
     class Meta:
         model = master_models.MotherTongue
         fields = ['id', 'name']
-
-
-class AcademicYearSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = master_models.AcademicYear
-        fields = ['id','academic_year', 'start', 'end']
-        
-    # def validate(self, data):
-       
-    #     if data.get('start') == data.get('end'):
-    #         raise serializers.ValidationError('Start and end date should be different')
-        
-    #     if data.get('start') > data.get('end'):
-    #         raise serializers.ValidationError('Start date cannot be greater than end data')
-        
-    #     if master_models.AcademicYear.objects.filter(academic_year = data['academic_year']).exists():
-    #         raise serializers.ValidationError('Academic year already exists')
-       
-    #     return data
-
-class StudentRegisterFieldsSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = master_models.StudentRegisterFields
-        fields = ['id', 'field','is_mandatory']

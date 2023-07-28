@@ -83,7 +83,7 @@ class ApplicationViewSet(ApplicationMixin):
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
             user  = self.request.user.id
-            mode = True
+            mode = False
             
         else:
             user = 0
@@ -190,7 +190,7 @@ class DashboardService(APIView):
     permission_classes = [IsAuthenticated, HasOrganizationAPIKey]
 
     def get(self, request):
-        academic_year = request.GET.get('academicYear', None)  
+        academic_year = request.GET.get('academicYear', None)
         dashboard_service_object = PreadmissionCountService(academic_year)
         profile_service = ProfileCountService()
         dashboard_service = {
