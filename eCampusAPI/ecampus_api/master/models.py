@@ -126,3 +126,7 @@ class AcademicYear(models.Model):
     academic_year = models.CharField(max_length=9)
     start = models.DateField('Running Academic Start', default='2020-02-02')
     end = models.DateField('Running Academic End', default='2020-02-02')
+
+class StudentRegisterFields(models.Model):
+    field = models.TextField('field')
+    is_mandatory = models.BooleanField(default=False, null=False)

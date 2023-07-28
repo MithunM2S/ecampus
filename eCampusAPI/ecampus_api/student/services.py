@@ -31,18 +31,60 @@ class ProfileCountService(object):
         return old_student_count
 
     def get_cards_count(self):
+        #queryset is a just a manager object of a profile
+        
         cards = self.queryset.values('admission_academic_year').order_by().annotate(
             total_student= Count('id'),
             new_student= Count('id', filter=Q(admission_academic_year=self.filter_admission_academic_year)),
         )
+    
+        
+        '''
+        The cards variable look something like this for the academic_year 2023_2024
+        <QuerySet [{'admission_academic_year': '2023_2024', 'total_student': 410, 'new_student': 410}]>
+        '''
+
         old_student = self.get_old_student_count()
-        if cards:
-            del cards[0]['admission_academic_year']
-            cards[0]['old_student'] = old_student
+        # if cards: #bugs in the code needs to be fixed 
+        #     print(cards, 'ok')
+        #     del cards[0]['admission_academic_year']
+        #     cards[0]['old_student'] = old_student
+        #     cards[0]['new_student'] = cards[1]['new_student']
+        #     cards[0]['total_student'] += cards[1]['total_student']
+        #     data = cards
+        #     # print(data)
+        # else:
+        #     data = [{"old_student": old_student}]
+        # if cards:
+        #     del cards[0]['admission_academic_year']
+        #     cards[0]['old_student'] = old_student
+        #     data = cards
+        if cards:            
+            current_year = self.filter_admission_academic_year
+            
+            data = {
+                'total_student' : 0,
+                'new_studnet' : 0,
+                'old_student' : 0
+                 }
+            
+
+            for years_wise_info in cards:
+                data['total_student'] += years_wise_info['total_student']
+                data['old_student'] = old_student
+                if years_wise_info['admission_academic_year'] == self.filter_admission_academic_year:
+                    data['new_studnet'] = years_wise_info['new_student']
+
+            cards[0]['old_student'] = data['old_student']
+            cards[0]['new_student'] = data['new_studnet']
+            cards[0]['total_student'] = data['total_student']
+            
             data = cards
+        
         else:
             data = [{"old_student": old_student}]
         return data
+        
 
     # Get Class group wise count 
     def get_class_group_wise_student_count(self):
@@ -93,6 +135,10 @@ class ProfileCountService(object):
         return academic_year_wise_count
 
 def get_student_state(student_id):
+    '''
+    Function which helps to determine whether the student is old or new
+    '''
+    
     try:
         student = Profile.objects.values('id', 'class_name', 'section', 'quota', 'admission_academic_year').get(id=student_id)
         run_academic_year = master_services.get_academic_years_key_value('running')[0]
@@ -112,3 +158,25 @@ def get_student(student_id):
         return student
     except Exception as e:
         return None
+    
+
+def delete_null_keys_if_present(request_data):
+    '''
+    This function is used to delete the keys of the 
+    empty string of the json sent from the frontend
+    so that later we can send it for the serializer
+    '''
+    cleaned_request_data = request_data
+    keys_to_delete = []
+    for key in request_data:
+        if len(str(request_data[key]).strip()) == 0:
+            keys_to_delete.append(key)
+    
+    if keys_to_delete:  
+        for key in keys_to_delete:
+            del cleaned_request_data[key]
+        return cleaned_request_data
+    
+    return cleaned_request_data
+    
+            

@@ -14,7 +14,7 @@ class PreadmissionCountService(object):
         else:
             self.filter_acdemic_year = services.get_academic_years_key_value('running')[0]
         self.queryset = Application.objects.filter(academic_year=self.filter_acdemic_year)
-
+    
     # Get total application count
     # def get_total_application_count(self):
     #     total_application_count = self.queryset.count()
@@ -102,8 +102,8 @@ class PreadmissionCountService(object):
             doc_unverified=Count('is_docs_verified', filter=Q(is_applied=True) & Q(is_docs_verified=False)),
             admitted=Count('is_admitted', filter=Q(is_admitted=True)),
             not_admitted=Count('is_admitted', filter=Q(is_admitted=False)),
-            online_count=Count('mode', filter=Q(mode=False)),
-            offline_count=Count('mode', filter=Q(mode=True)),
+            online_count=Count('mode', filter=Q(mode=True)),
+            offline_count=Count('mode', filter=Q(mode=False)), #mode is True if it's applied online
             verified_online_count=Count('mode', filter=Q(mode=True) & Q(is_verified=True)),
             verified_offline_count=Count('mode', filter=Q(mode=False) & Q(is_verified=True)),
             unverified_online_count=Count('mode', filter=Q(mode=True) & Q(is_verified=False)),

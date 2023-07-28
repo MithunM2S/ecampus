@@ -1,7 +1,7 @@
 from ecampus_api.settings.site_settings import * 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'xz)0ks*go#sj7)fit)x8eo2zk+k7h%gsc$s)1#47@tfw3b#s=g'
+SECRET_KEY = 'U5MeEsZr.BtRlbnseTsLBwYW0ptAV7QgORibuVuq3SY9yGpIrvf1NnQR8yLWd7hz8dRCVsdfq'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -15,10 +15,10 @@ ALLOWED_HOSTS = ['*']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'eCampusAPI',
+        'NAME': 'ecampus',
         'HOST': '',
-        'USER': 'root',
-        'PASSWORD': '',
+        'USER': 'surya-dev',
+        'PASSWORD': '111111',
         'PORT': '',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
@@ -34,7 +34,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:8000",
     'http://creaxiotechnologies.com',
-    'http://vbes.in'
+    'http://vbes.in',
+    "http://localhost:4200"
 ]
 
 SWAGGER_SETTINGS = {
